@@ -1,0 +1,79 @@
+{
+  "name": "@packlet/gpr",
+  "version": "0.1.0",
+  "description": "A lightweight utility for preparing package variants compatible with GitHub Packages (GPR). It focuses on deterministic, local, and CI-friendly workflows",
+  "license": "MIT",
+  "homepage": "https://github.com/kazvizian/packlet-js",
+  "author": {
+    "name": "KazViz",
+    "email": "kaz@kazviz.com",
+    "url": "https://kazviz.com"
+  },
+  "bugs": {
+    "url": "https://github.com/kazvizian/packlet-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kazvizian/packlet-js.git",
+    "directory": "packages/gpr"
+  },
+  "bin": {
+    "packlet": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build",
+    "lint": "echo 'no lint yet'",
+    "test": "echo 'no tests yet'"
+  },
+  "packageManager": "bun@1.0.0",
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18"
+  },
+  "keywords": [
+    "kazviz",
+    "kazvizian",
+    "packlet",
+    "github",
+    "publish",
+    "registry",
+    "gpr",
+    "npm",
+    "package"
+  ],
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "tsdown": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "dts": true,
+    "sourcemap": true,
+    "clean": true,
+    "treeshake": true,
+    "target": "es2019",
+    "minify": false
+  }
+}
