@@ -1,0 +1,82 @@
+import fs from "node:fs"
+import path from "node:path"
+import { writeArtifactsManifest } from "@packlet/core"
+import type { AwakenGprOptions } from "./awaken-gpr"
+import { awakenGpr } from "./awaken-gpr"
+
+/**
+ * Handle the `prepare` CLI subcommand. Kept minimal so `index.ts` stays lean.
+ */
+export function handlePrepare(opts: Record<string, unknown>): void {
+  const rootDir = path.resolve((opts.root as string) || process.cwd())
+  const distDir = path.resolve(rootDir, (opts.dist as string) || "dist")
+
+  try {
+    const pkgPath = path.join(rootDir, "package.json")
+    const raw = fs.readFileSync(pkgPath, "utf8")
+    const pkg = JSON.parse(raw) as {
+      packlet?: { gpr?: boolean; gprName?: string }
+    }
+    if (!pkg.packlet || pkg.packlet.gpr !== true) {
+      console.log(
+        `[gpr:prepare] skip: packlet.gpr flag not enabled in ${pkgPath}`
+      )
+      return
+    }
+    if (!fs.existsSync(distDir)) {
+      console.log(`[gpr:prepare] skip: no dist at ${distDir}`)
+      return
+    }
+
+    // Validate optional gprName override (must be @scope/name)
+    let nameOverride = (opts.name as string) || pkg.packlet.gprName
+    const scopedPattern = /^@[^/]+\/[A-Za-z0-9._-]+$/
+    if (nameOverride && !scopedPattern.test(nameOverride)) {
+      console.warn(
+        `[gpr:prepare] invalid gprName '${nameOverride}' (expected @scope/name); ignoring override.`
+      )
+      nameOverride = undefined
+    }
+
+    const options: AwakenGprOptions = {
+      rootDir,
+      distDir,
+      gprDir: (opts.gprDir as string) ?? (opts["gpr-dir"] as string),
+      artifactsDir: (opts.artifacts as string) ?? (opts.artifactsDir as string),
+      scope: (opts.scope as string) || process.env.GPR_SCOPE,
+      registry:
+        (opts.registry as string) || process.env.GPR_REGISTRY || undefined,
+      nameOverride
+    }
+
+    const res = awakenGpr(options)
+    // always write artifacts manifest into artifactsDir (awakenGpr already does so),
+    // but support --manifest and --json flags for CLI compatibility with release tooling
+    const artifactsDir = res.artifactsDir
+    const manifest = writeArtifactsManifest(artifactsDir, {
+      packageName:
+        path.basename(res.scopedName).replace(/^@.+\//, "") || res.scopedName,
+      scopedName: res.scopedName,
+      version: res.version
+    })
+
+    // If caller passed a manifest path, write manifest there as well
+    if (opts.manifest) {
+      const manifestPath = path.resolve(String(opts.manifest))
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+    }
+
+    if ((opts.json as boolean) === true || opts.json === "true") {
+      process.stdout.write(`${JSON.stringify(manifest)}\n`)
+    } else {
+      console.log(`Prepared GPR package at ${res.gprDir}`)
+      console.log(`Artifacts prepared at ${res.artifactsDir}`)
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(message)
+    process.exitCode = 1
+  }
+}
+
+export default handlePrepare
