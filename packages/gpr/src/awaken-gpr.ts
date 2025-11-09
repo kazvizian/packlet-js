@@ -12,7 +12,7 @@ import {
  */
 export interface AwakenGprOptions {
   /** Root directory of the package to prepare. Defaults to process.cwd(). */
-    rootDir?: string
+  rootDir?: string
   /** Directory where a scoped GPR package will be staged. Defaults to .gpr under root. */
   gprDir?: string
   /** Directory where tarballs will be placed. Defaults to .artifacts under root. */
