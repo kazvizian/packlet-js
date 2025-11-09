@@ -1,13 +1,18 @@
+import { execSync } from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
-import { execSync } from "node:child_process"
+import {
+  copyRecursive,
+  deriveScopedName,
+  writeArtifactsManifest
+} from "@packlet/core"
 
 /**
  * Options for awakenGpr. All paths are resolved relative to process.cwd() by default.
  */
 export interface AwakenGprOptions {
   /** Root directory of the package to prepare. Defaults to process.cwd(). */
-  rootDir?: string
+    rootDir?: string
   /** Directory where a scoped GPR package will be staged. Defaults to .gpr under root. */
   gprDir?: string
   /** Directory where tarballs will be placed. Defaults to .artifacts under root. */
@@ -38,31 +43,7 @@ export interface AwakenGprResult {
   version: string
 }
 
-interface FileSystemEntry {
-  name: string
-  isDirectory(): boolean
-  isFile(): boolean
-}
-
-interface CopyRecursiveFn {
-  (src: string, dest: string): void
-}
-
-const copyRecursive: CopyRecursiveFn = (src: string, dest: string): void => {
-  const entries: FileSystemEntry[] = fs.readdirSync(src, {
-    withFileTypes: true
-  }) as unknown as FileSystemEntry[]
-  for (const entry of entries) {
-    const s: string = path.join(src, entry.name)
-    const d: string = path.join(dest, entry.name)
-    if (entry.isDirectory()) {
-      fs.mkdirSync(d, { recursive: true })
-      copyRecursive(s, d)
-    } else if (entry.isFile()) {
-      fs.copyFileSync(s, d)
-    }
-  }
-}
+// file copy handled by @packlet/core.copyRecursive
 
 /**
  * Prepare a GitHub Packages (GPR) scoped variant of the current package.
@@ -96,14 +77,22 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
 
   // Read root package.json
   const rootPkgPath = path.join(root, "package.json")
+  type RepoField =
+    | string
+    | {
+        type?: string
+        url?: string
+        directory?: string
+      }
+    | undefined
   const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf8")) as {
     name: string
     version: string
     description?: string
     license?: string
     homepage?: string
-    repository?: unknown
-    author?: unknown
+    repository?: RepoField
+    author?: { name?: string; email?: string; url?: string } | string
     keywords?: string[]
     sideEffects?: boolean
   }
@@ -120,40 +109,20 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     "true"
   const NAME_OVERRIDE = process.env.GPR_NAME || opts.nameOverride
 
-  // Create scoped package.json for GitHub Packages
-  // Determine base name for the scoped package. Priority:
-  // 1. NAME_OVERRIDE (env or opts)
-  // 2. repository URL's repo name (if present) — this ensures GPR package name matches GitHub URL when npm name differs
-  // 3. package.json name (strip existing scope if present)
+  // Create scoped package.json for GitHub Packages via shared derivation logic
   const repoUrlRaw: string | undefined = (() => {
-    const repo = (rootPkg as any).repository
+    const repo = rootPkg.repository
     if (!repo) return undefined
     if (typeof repo === "string") return repo
-    if (typeof repo === "object" && repo !== null)
-      return repo.url || repo.directory || undefined
-    return undefined
+    return repo.url ?? repo.directory ?? undefined
   })()
 
-  const parseRepoName = (u?: string): string | undefined => {
-    if (!u) return undefined
-    // normalize common prefixes
-    const s = u.replace(/^git\+/, "").replace(/\.git$/, "")
-    // match both ssh and https forms: git@github.com:owner/repo or https://github.com/owner/repo
-    const m = s.match(/[/:]([^/:]+)\/([^/]+)$/)
-    if (m && m[2]) return m[2].replace(/\.git$/, "")
-    return undefined
-  }
-
-  const repoName = parseRepoName(repoUrlRaw)
-  let baseName =
-    NAME_OVERRIDE && NAME_OVERRIDE.trim().length
-      ? NAME_OVERRIDE.trim()
-      : repoName ?? rootPkg.name
-  // If the chosen baseName is scoped like @scope/name, strip the original scope
-  if (baseName.includes("/")) {
-    baseName = baseName.split("/").pop() as string
-  }
-  const scopedName = `@${SCOPE}/${baseName}`
+  const { baseName, scopedName } = deriveScopedName({
+    name: rootPkg.name,
+    repoUrl: repoUrlRaw,
+    override: NAME_OVERRIDE,
+    scope: SCOPE
+  })
   const gprPkg = {
     name: scopedName,
     version: rootPkg.version,
@@ -214,7 +183,7 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
       .trim()
       .split("\n")
       .pop()
-    const packFile = out && out.length ? out : `${rootPkg.name}-${version}.tgz`
+    const packFile = out?.length ? out : `${rootPkg.name}-${version}.tgz`
     const src = path.join(root, packFile)
     const dst = path.join(artifactsDir, packFile)
     if (fs.existsSync(src)) fs.renameSync(src, dst)
@@ -234,13 +203,20 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
       .pop()
     const scopeName = scopedName.replace(/^@/, "").replace("/", "-")
     const fallback = `${scopeName}-${version}.tgz`
-    const packFile = out && out.length ? out : fallback
+    const packFile = out?.length ? out : fallback
     const src = path.join(gprDir, packFile)
     const dst = path.join(artifactsDir, packFile)
     if (fs.existsSync(src)) fs.renameSync(src, dst)
   } catch {
     // non-fatal
   }
+
+  // Write artifacts manifest for downstream orchestration (sailet)
+  writeArtifactsManifest(artifactsDir, {
+    packageName: baseName,
+    scopedName,
+    version
+  })
 
   return { gprDir, artifactsDir, scopedName, version }
 }
