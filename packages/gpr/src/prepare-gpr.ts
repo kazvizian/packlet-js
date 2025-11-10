@@ -5,7 +5,22 @@ import type { AwakenGprOptions } from "./awaken-gpr"
 import { awakenGpr } from "./awaken-gpr"
 
 /**
- * Handle the `prepare` CLI subcommand. Kept minimal so `index.ts` stays lean.
+ * Handle the `prepare` CLI subcommand.
+ *
+ * This lighter-weight command inspects `package.json` for a `packlet.gpr`
+ * flag and, if enabled and a `dist` directory exists, delegates to
+ * {@link awakenGpr} to stage and pack the GPR variant. The function writes
+ * an artifacts manifest and supports CLI-style options for compatibility
+ * with release tooling.
+ *
+ * @param opts - Raw options object produced by Commander. Recognized fields
+ *               include `root`, `dist`, `gprDir`, `artifacts`, `scope`,
+ *               `registry`, and `name`.
+ * @returns void. On failure the function logs an error and sets
+ *          `process.exitCode = 1`.
+ *
+ * @example
+ * handlePrepare({ root: '.', dist: 'dist' })
  */
 export function handlePrepare(opts: Record<string, unknown>): void {
   const rootDir = path.resolve((opts.root as string) || process.cwd())
