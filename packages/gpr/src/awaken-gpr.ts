@@ -52,9 +52,23 @@ export interface AwakenGprResult {
  * - Reads root package.json to derive metadata.
  * - Stages a scoped package under gprDir with adjusted name and exports.
  * - Copies dist/ into the staged package and optionally README/LICENSE.
- * - Runs `npm pack` for root and staged package to produce tarballs in artifactsDir.
+ * - Runs `npm pack` for root and staged package to produce tarballs in
+ *   `artifactsDir`.
  *
- * Throws if `dist/` does not exist.
+ * The function performs synchronous filesystem operations and will throw an
+ * Error on fatal conditions (for example when `dist` does not exist). Some
+ * non-fatal failures (such as `npm pack` failing) are swallowed to make the
+ * operation robust in CI environments.
+ *
+ * @param opts - Configuration options for the operation (paths, scope,
+ *               registry and include flags).
+ * @returns An object describing the prepared GPR artifact locations and
+ *          resolved package name/version.
+ * @throws When required files (e.g. `dist/`) are missing or other fatal
+ *         filesystem errors occur.
+ *
+ * @example
+ * const res = awakenGpr({ rootDir: process.cwd(), scope: 'acme' })
  */
 export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   const root = path.resolve(opts.rootDir ?? process.cwd())
