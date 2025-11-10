@@ -4,6 +4,21 @@ import { awakenGpr } from "./awaken-gpr"
 /**
  * Handle the `gpr` CLI command (full feature) as a separate module for clarity.
  */
+/**
+ * Handle the `gpr` CLI command.
+ *
+ * This function adapts raw Commander option objects into a strongly-typed
+ * {@link AwakenGprOptions} and invokes {@link awakenGpr}. Any errors are
+ * logged and the process exit code is set to `1` on failure.
+ *
+ * @param opts - Raw options object produced by Commander. Common fields:
+ *               `root`, `gprDir`, `artifacts`, `dist`, `scope`, `registry`,
+ *               `name`, `includeReadme`, `includeLicense`.
+ * @returns A promise that resolves when the operation completes.
+ *
+ * @example
+ * await handleGpr({ root: '.', dist: 'dist' })
+ */
 export async function handleGpr(opts: Record<string, unknown>): Promise<void> {
   const options: AwakenGprOptions = {
     rootDir: opts.root as string | undefined,
