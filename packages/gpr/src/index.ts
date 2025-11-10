@@ -11,7 +11,15 @@ export { awakenGpr }
 
 /**
  * CLI entrypoint for `packlet`.
- * Provides a `gpr` subcommand to prepare a GitHub Packages variant of the package.
+ *
+ * Provides a `gpr` subcommand to prepare a GitHub Packages variant of the
+ * package. This function constructs the Commander program and delegates
+ * subcommand handling to `gpr-cli` and `prepare-gpr` modules.
+ *
+ * @param argv - Optional argv array (defaults to `process.argv`). Useful
+ *               for tests and programmatic invocation.
+ * @returns A promise that resolves once command parsing and execution
+ *          completes.
  */
 export async function runCli(
   argv: readonly string[] = process.argv
