@@ -1,4 +1,16 @@
-import { afterAll, describe, expect, it } from "bun:test"
+/**
+ * Tests for the `prepare` CLI subcommand.
+ *
+ * This suite verifies the CLI's behaviour when invoked with `packlet prepare`:
+ * - Skips when `packlet.gpr` flag is missing in package.json.
+ * - Skips when `dist` is missing.
+ * - Prepares a staged `.gpr` package when flag and `dist` are present.
+ * - Honors a valid `packlet.gprName` override and ignores invalid overrides.
+ *
+ * The tests create temporary fixture directories and capture console output
+ * to assert expected informational or warning messages.
+ */
+import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import fs from "node:fs"
 import path from "node:path"
 import { runCli } from "../src/index"
@@ -47,15 +59,32 @@ async function runPrepare(root: string): Promise<string> {
 }
 
 describe("gpr prepare subcommand", () => {
+  beforeAll(() => {
+    // speed up CLI tests by skipping npm pack operations
+    process.env.GPR_SKIP_PACK = "true"
+  })
+  /**
+   * CLI behavior: when `packlet.gpr` flag is not set in package.json the
+   * command should skip staging.
+   *
+   * @expectation The CLI prints a skip message and does not create `.gpr`.
+   */
   it("skips when packlet.gpr flag missing", async () => {
     const dir = makeTempFixture("skip-flag")
     fs.mkdirSync(path.join(dir, "dist"), { recursive: true })
     fs.writeFileSync(path.join(dir, "dist", "index.js"), "module.exports = {}")
     const out = await runPrepare(dir)
+    // Expect skip message indicating missing packlet.gpr flag
     expect(out).toMatch(/skip: packlet\.gpr flag not enabled/)
+    // No staging directory should have been created
     expect(fs.existsSync(path.join(dir, ".gpr"))).toBe(false)
   })
 
+  /**
+   * CLI behavior: when `dist` is missing the command should skip.
+   *
+   * @expectation CLI reports `skip: no dist` and does not create `.gpr`.
+   */
   it("skips when dist missing", async () => {
     const dir = makeTempFixture("skip-dist")
     fs.writeFileSync(
@@ -67,10 +96,16 @@ describe("gpr prepare subcommand", () => {
       )
     )
     const out = await runPrepare(dir)
+    // CLI should explicitly note that dist is missing
     expect(out).toMatch(/skip: no dist/)
+    // No staging should occur
     expect(fs.existsSync(path.join(dir, ".gpr"))).toBe(false)
   })
 
+  /**
+   * Positive path: when `packlet.gpr` is true and `dist` exists, the CLI
+   * should stage a `.gpr` package and report success.
+   */
   it("prepares when flag and dist present", async () => {
     const dir = makeTempFixture("prepare-ok")
     fs.writeFileSync(
@@ -84,10 +119,16 @@ describe("gpr prepare subcommand", () => {
     fs.mkdirSync(path.join(dir, "dist"), { recursive: true })
     fs.writeFileSync(path.join(dir, "dist", "index.js"), "export {}")
     const out = await runPrepare(dir)
+    // CLI should indicate a prepared GPR package
     expect(out).toMatch(/Prepared GPR package/)
+    // Staged package.json must exist in .gpr
     expect(fs.existsSync(path.join(dir, ".gpr", "package.json"))).toBe(true)
   })
 
+  /**
+   * Configuration override: valid `packlet.gprName` should be applied
+   * verbatim to the staged package.json.
+   */
   it("applies valid gprName override from packlet.gprName", async () => {
     const dir = makeTempFixture("gprName-valid")
     fs.writeFileSync(
@@ -108,9 +149,14 @@ describe("gpr prepare subcommand", () => {
     const staged = JSON.parse(
       fs.readFileSync(path.join(dir, ".gpr", "package.json"), "utf8")
     )
+    // The staged package name should equal the valid override provided
     expect(staged.name).toBe("@scope/valid-name")
   })
 
+  /**
+   * Invalid override handling: invalid `packlet.gprName` should be ignored
+   * and derivation should be used instead.
+   */
   it("ignores invalid gprName override and falls back to derived", async () => {
     const dir = makeTempFixture("gprName-invalid")
     fs.writeFileSync(
@@ -128,10 +174,12 @@ describe("gpr prepare subcommand", () => {
     fs.mkdirSync(path.join(dir, "dist"), { recursive: true })
     fs.writeFileSync(path.join(dir, "dist", "index.js"), "export {}")
     const out = await runPrepare(dir)
+    // CLI should warn about invalid override and continue using derived name
     expect(out).toMatch(/invalid gprName/)
     const staged = JSON.parse(
       fs.readFileSync(path.join(dir, ".gpr", "package.json"), "utf8")
     )
+    // Default scope (kazvizian) should be applied when override is invalid
     expect(staged.name).toBe("@kazvizian/fixture-invalid")
   })
 })
