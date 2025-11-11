@@ -187,42 +187,46 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
 
   // Create npm pack tarballs for GitHub Release assets
   const version = rootPkg.version
-  // pack root (npmjs package)
-  try {
-    const out = execSync("npm pack", {
-      cwd: root,
-      stdio: ["ignore", "pipe", "inherit"]
-    })
-      .toString()
-      .trim()
-      .split("\n")
-      .pop()
-    const packFile = out?.length ? out : `${rootPkg.name}-${version}.tgz`
-    const src = path.join(root, packFile)
-    const dst = path.join(artifactsDir, packFile)
-    if (fs.existsSync(src)) fs.renameSync(src, dst)
-  } catch {
-    // non-fatal
+  // pack root (npmjs package) - allow skipping during tests to speed up
+  if (process.env.GPR_SKIP_PACK !== "true") {
+    try {
+      const out = execSync("npm pack", {
+        cwd: root,
+        stdio: ["ignore", "pipe", "inherit"]
+      })
+        .toString()
+        .trim()
+        .split("\n")
+        .pop()
+      const packFile = out?.length ? out : `${rootPkg.name}-${version}.tgz`
+      const src = path.join(root, packFile)
+      const dst = path.join(artifactsDir, packFile)
+      if (fs.existsSync(src)) fs.renameSync(src, dst)
+    } catch {
+      // non-fatal
+    }
   }
 
-  // pack GPR (scoped package)
-  try {
-    const out = execSync("npm pack", {
-      cwd: gprDir,
-      stdio: ["ignore", "pipe", "inherit"]
-    })
-      .toString()
-      .trim()
-      .split("\n")
-      .pop()
-    const scopeName = scopedName.replace(/^@/, "").replace("/", "-")
-    const fallback = `${scopeName}-${version}.tgz`
-    const packFile = out?.length ? out : fallback
-    const src = path.join(gprDir, packFile)
-    const dst = path.join(artifactsDir, packFile)
-    if (fs.existsSync(src)) fs.renameSync(src, dst)
-  } catch {
-    // non-fatal
+  // pack GPR (scoped package) - allow skipping during tests to speed up
+  if (process.env.GPR_SKIP_PACK !== "true") {
+    try {
+      const out = execSync("npm pack", {
+        cwd: gprDir,
+        stdio: ["ignore", "pipe", "inherit"]
+      })
+        .toString()
+        .trim()
+        .split("\n")
+        .pop()
+      const scopeName = scopedName.replace(/^@/, "").replace("/", "-")
+      const fallback = `${scopeName}-${version}.tgz`
+      const packFile = out?.length ? out : fallback
+      const src = path.join(gprDir, packFile)
+      const dst = path.join(artifactsDir, packFile)
+      if (fs.existsSync(src)) fs.renameSync(src, dst)
+    } catch {
+      // non-fatal
+    }
   }
 
   // Write artifacts manifest for downstream orchestration (sailet)
