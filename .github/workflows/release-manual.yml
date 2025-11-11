@@ -1,0 +1,48 @@
+name: Release (manual, Changesets)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: "NPM dist-tag (e.g. latest, next, beta)"
+        type: string
+        default: "latest"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Test
+        run: bun run test --continue || bun run test
+
+      - name: Publish via Changesets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          LEFTHOOK: "0"
+          NPM_CONFIG_PROVENANCE: "true"
+          npm_config_tag: ${{ inputs.dist_tag }}
+        run: bun run release
