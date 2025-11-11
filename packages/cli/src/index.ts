@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs"
 import path from "node:path"
+import { build as buildPacklet } from "@packlet/build"
 import {
   listArtifacts,
   validateDist,
@@ -30,6 +31,39 @@ export async function runCli(
     .name("packlet")
     .description("Packing and artifact utilities")
     .version("0.1.0")
+
+  program
+    .command("build")
+    .description("Build ESM+CJS and emit types for current package")
+    .option("--entry <file>", "Entry file (default: src/index.ts)")
+    .option("--outdir <dir>", "Output directory (default: dist)")
+    .option("--formats <list>", "Comma-separated: esm,cjs (default: esm,cjs)")
+    .option("--sourcemap <kind>", "inline | none (default: inline)")
+    .option("--no-types", "Skip emitting .d.ts")
+    .option("--target <target>", "Build target (default: node)")
+    .option("--exec-cjs", "chmod +x dist/index.cjs (for CLIs)")
+    .option("--no-minify", "Disable minification")
+    .action(async (opts: Record<string, unknown>) => {
+      const formats = String(opts.formats || "esm,cjs")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean) as ("esm" | "cjs")[]
+      try {
+        await buildPacklet({
+          entry: (opts.entry as string) || "src/index.ts",
+          outdir: (opts.outdir as string) || "dist",
+          formats,
+          sourcemap: (opts.sourcemap as string) === "none" ? "none" : "inline",
+          types: (opts.types as boolean) ?? true,
+          target: (opts.target as string) || "node",
+          execCjs: Boolean(opts.execCjs),
+          minify: (opts.minify as boolean) ?? true
+        })
+      } catch (err) {
+        console.error(err instanceof Error ? err.message : String(err))
+        process.exitCode = 1
+      }
+    })
 
   program
     .command("gpr")
@@ -148,7 +182,11 @@ export async function runCli(
   await program.parseAsync(argv)
 }
 
-if (require.main === module) {
-  // Top-level await not used; fire-and-forget CLI run, no floating promise suppression needed
+// Execute when run directly (guard for ESM environments like Bun where `module` may be undefined)
+if (
+  typeof require !== "undefined" &&
+  typeof module !== "undefined" &&
+  require.main === module
+) {
   void runCli()
 }
