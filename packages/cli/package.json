@@ -4,9 +4,9 @@
   "description": "Umbrella CLI for packlet utilities (gpr, validate, list-artifacts).",
   "license": "MIT",
   "bin": {
-    "packlet": "dist/index.js"
+    "packlet": "dist/index.cjs"
   },
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -17,11 +17,11 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "node ../build/dist/cli.cjs build --exec-cjs",
     "lint": "eslint \"src/**/*.ts\" --ext .ts",
     "test": "bun test",
     "clean": "rm -rf dist"
@@ -29,7 +29,11 @@
   "dependencies": {
     "commander": "^14.0.2",
     "@packlet/core": "workspace:*",
-    "@packlet/gpr": "workspace:*"
+    "@packlet/gpr": "workspace:*",
+    "@packlet/build": "workspace:*"
+  },
+  "devDependencies": {
+    "@packlet/build": "workspace:*"
   },
   "packlet": {
     "gpr": true
@@ -37,19 +41,5 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
-  },
-  "tsdown": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "format": [
-      "esm",
-      "cjs"
-    ],
-    "dts": true,
-    "sourcemap": true,
-    "clean": true,
-    "treeshake": true,
-    "target": "es2019"
   }
 }

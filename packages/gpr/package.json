@@ -18,19 +18,35 @@
     "directory": "packages/gpr"
   },
   "bin": {
-    "packlet": "dist/index.js"
+    "packlet": "dist/index.cjs"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "node ../build/dist/cli.cjs build --exec-cjs",
     "clean": "rm -rf dist",
     "prepublishOnly": "bun run build",
-    "lint": "echo 'no lint yet'",
-    "test": "echo 'no tests yet'"
+    "test": "bun test"
   },
-  "packageManager": "bun@1.0.0",
-  "engines": {
-    "bun": ">=1.2.0",
-    "node": ">=18"
+  "dependencies": {
+    "commander": "^14.0.2",
+    "@packlet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@packlet/build": "workspace:*"
   },
   "keywords": [
     "kazviz",
@@ -43,37 +59,13 @@
     "npm",
     "package"
   ],
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "default": "./dist/index.mjs"
-    }
-  },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
-  "tsdown": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "format": [
-      "esm",
-      "cjs"
-    ],
-    "dts": true,
-    "sourcemap": true,
-    "clean": true,
-    "treeshake": true,
-    "target": "es2019",
-    "minify": false
+  "packageManager": "bun@1.3.1",
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18"
   }
 }

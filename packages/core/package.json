@@ -32,9 +32,12 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "node ../build/dist/cli.cjs build",
     "test": "bun test",
     "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@packlet/build": "workspace:*"
   },
   "keywords": [
     "kazviz",
@@ -57,19 +60,5 @@
   "engines": {
     "bun": ">=1.2.0",
     "node": ">=18"
-  },
-  "tsdown": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "format": [
-      "esm",
-      "cjs"
-    ],
-    "dts": true,
-    "sourcemap": true,
-    "clean": true,
-    "treeshake": true,
-    "target": "es2019"
   }
 }
