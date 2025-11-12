@@ -2,8 +2,6 @@
 "packlet": minor
 "@packlet/cli": minor
 "@packlet/gpr": minor
-"@packlet/build": patch
-"@packlet/core": patch
 ---
 
 - Added support for a `packlet.gprName` field in `package.json` for each package, allowing explicit override of the GPR package name (scoped or unscoped). If unscoped, the chosen scope is applied automatically.
