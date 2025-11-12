@@ -165,7 +165,7 @@ describe("gpr prepare subcommand", () => {
         {
           name: "fixture-invalid",
           version: "1.2.3",
-          packlet: { gpr: true, gprName: "not-scoped" }
+          packlet: { gpr: true, gprName: "not scoped" }
         },
         null,
         2

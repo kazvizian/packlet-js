@@ -114,6 +114,7 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     dependencies?: Record<string, string>
     peerDependencies?: Record<string, string>
     optionalDependencies?: Record<string, string>
+    packlet?: { gpr?: boolean; gprName?: string }
   }
 
   // Env-based configuration for reusability
@@ -126,7 +127,16 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   const INCLUDE_LICENSE =
     (process.env.GPR_INCLUDE_LICENSE ?? String(opts.includeLicense ?? true)) ===
     "true"
-  const NAME_OVERRIDE = process.env.GPR_NAME || opts.nameOverride
+  // Validate optional override: allow scoped (@scope/name) or unscoped (name) without spaces
+  const scopedPattern = /^@[^/]+\/[A-Za-z0-9._-]+$/
+  const unscopedPattern = /^[A-Za-z0-9._-]+$/
+  const overrideRaw =
+    process.env.GPR_NAME || opts.nameOverride || rootPkg.packlet?.gprName
+  const NAME_OVERRIDE =
+    overrideRaw &&
+    (scopedPattern.test(overrideRaw) || unscopedPattern.test(overrideRaw))
+      ? overrideRaw
+      : undefined
 
   // In CI on Windows, spawning `npm pack` is slow and flaky. Allow opt-out via env
   // and auto-disable in Windows CI to keep tests fast and deterministic.
@@ -136,11 +146,23 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     process.env.GPR_SKIP_PACK === "true" || (IS_WINDOWS && IN_CI)
 
   // Create scoped package.json for GitHub Packages via shared derivation logic
+  // In a monorepo, prefer the package's own name over the repo name when deriving
+  // the GPR base name. Using the repo URL would make every package share the same
+  // base (e.g., "packlet-js"), causing registry conflicts. Detect monorepo by
+  // repository.directory or by path pattern packages/*.
+  const isMonorepoPackage = (() => {
+    const repo = rootPkg.repository
+    if (repo && typeof repo !== "string" && repo.directory) return true
+    // Fallback: if parent folder is named "packages", treat as monorepo
+    return path.basename(path.dirname(root)) === "packages"
+  })()
+
   const repoUrlRaw: string | undefined = (() => {
+    if (isMonorepoPackage) return undefined
     const repo = rootPkg.repository
     if (!repo) return undefined
     if (typeof repo === "string") return repo
-    return repo.url ?? repo.directory ?? undefined
+    return repo.url ?? undefined
   })()
 
   const { baseName, scopedName } = deriveScopedName({
@@ -151,8 +173,8 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   })
 
   // Build a map of internal monorepo packages (name -> { version, gprName }) when running inside
-  // a conventional packages/* workspace. This helps rewrite workspace:* deps to concrete versions
-  // and remap internal names to their GPR-scoped counterparts.
+  // a conventional packages/* workspace. This helps normalize workspace:* version ranges to concrete
+  // versions for internal deps. We DO NOT rename dependency package names; they remain as original npm names.
   const internalMap: Record<
     string,
     { version: string; gprName: string; gprEnabled: boolean }
@@ -170,11 +192,17 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
           const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8")) as {
             name?: string
             version?: string
-            packlet?: { gpr?: boolean }
+            packlet?: { gpr?: boolean; gprName?: string }
           }
           if (pkgJson.name && pkgJson.version) {
+            const ovr = pkgJson.packlet?.gprName
+            const validOverride =
+              ovr && (scopedPattern.test(ovr) || unscopedPattern.test(ovr))
+                ? ovr
+                : undefined
             const scoped = deriveScopedName({
               name: pkgJson.name,
+              override: validOverride,
               scope: SCOPE
             }).scopedName
             internalMap[pkgJson.name] = {
@@ -216,9 +244,8 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
         range = "*"
       }
     }
-    // If dependency is internal and has GPR enabled, rewrite the name to the GPR scoped name
-    const name = info?.gprEnabled ? info.gprName : depName
-    return { name, range }
+    // Keep dependency name unchanged; only adjust range
+    return { name: depName, range }
   }
 
   function rewriteDeps(
