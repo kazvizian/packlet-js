@@ -9,6 +9,8 @@
 [![Changesets Butterfly](https://img.shields.io/badge/Changesets-🦋-white)](./CHANGELOG.md)
 [![Biome Linter & Formatted](https://img.shields.io/badge/Biome-60a5fa?style=flat&logo=biome&logoColor=white)](https://biomejs.dev/)
 
+[![gzip size](http://img.badgesize.io/https://unpkg.com/@packlet/cli@latest/dist/index.mjs?compression=gzip)](https://unpkg.com/@packlet/cli@latest/dist/index.mjs)
+
 </div>
 
 Umbrella CLI providing the `packlet` command across the monorepo.
@@ -34,7 +36,7 @@ Flags:
 
 ### `packlet validate`
 
-Validate required dist entry files exist. Checks for `index.js`, `index.mjs`, `index.d.ts` by default.
+Validate required dist entry files exist. By default the tool expects `index.mjs` and `index.d.ts` (it will accept `index.js` when present for CJS compatibility).
 
 Flags:
 `--root <path>` root directory (default: cwd)
@@ -70,7 +72,7 @@ Produced by `gpr` (and optionally `prepare` in `@packlet/gpr`):
 ```fish
 bun install
 bun run build
-node packages/cli/dist/index.cjs list-artifacts --artifacts packages/gpr/.artifacts
+node packages/cli/dist/index.mjs list-artifacts --artifacts packages/gpr/.artifacts
 ```
 
 ## Relationship to `@packlet/gpr`

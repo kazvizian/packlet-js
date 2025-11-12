@@ -11,13 +11,15 @@
 [![Changesets Butterfly](https://img.shields.io/badge/Changesets-🦋-white)](./CHANGELOG.md)
 [![Biome Linter & Formatted](https://img.shields.io/badge/Biome-60a5fa?style=flat&logo=biome&logoColor=white)](https://biomejs.dev/)
 
+[![gzip size](http://img.badgesize.io/https://unpkg.com/@packlet/build@latest/dist/index.mjs?compression=gzip)](https://unpkg.com/@packlet/build@latest/dist/index.mjs)
+
 </div>
 
 Lightweight, general-purpose build wrapper for TypeScript/JavaScript packages.
 
 - Outputs ESM by default: `dist/index.mjs` (CJS available via `--cjs`)
 - Emits TypeScript declarations to `dist/` via `tsc`
-- Minify on by default; sourcemaps are disabled by default (enable external maps explicitly)
+- Minify on by default; sourcemaps are disabled by default (enable external maps explicitly with `--sourcemap external`)
 - Works in any Node/Bun project
 - Powers `packlet build` in the umbrella CLI
 
@@ -40,8 +42,8 @@ Use the provided binary or the umbrella CLI:
 ```json
 {
   "scripts": {
-    "build": "bun x packlet-build build --sourcemap none --external-auto",
-    "build:cli": "bun x packlet-build build --cjs --exec-js --sourcemap none --external-auto"
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
+    "build:cli": "node ../build/dist/cli.mjs build --cjs --exec-js --sourcemap none --external-auto"
   }
 }
 ```
@@ -76,7 +78,7 @@ Flags accepted by both `packlet build` and `packlet-build build`:
 - `--entry <file>`: default `src/index.ts`
 - `--outdir <dir>`: default `dist`
 - `--formats <list>`: default `esm` (use `--cjs` or `--formats esm,cjs` to also emit CJS)
-- `--sourcemap <kind>`: `external` | `none` (default `none`)
+- `--sourcemap <kind>`: `external` | `none` (default `none`). Prefer `external` for dev/debug; `inline` is coerced to `external` to avoid embedding large base64 maps.
 - `--no-types`: skip `.d.ts` emission
 - `--target <target>`: default `node`
 - `--exec-js`: mark `dist/index.mjs` or `dist/index.cjs` executable (for CLIs)

@@ -9,6 +9,8 @@
 [![npm version](https://img.shields.io/npm/v/@packlet/gpr.svg)](https://www.npmjs.com/package/@packlet/gpr)
 ![license](https://img.shields.io/github/license/kazvizian/packlet-gpr)
 
+[![gzip size](http://img.badgesize.io/https://unpkg.com/@packlet/gpr@latest/dist/index.mjs?compression=gzip)](https://unpkg.com/@packlet/gpr@latest/dist/index.mjs)
+
 </div>
 
 ## Overview
@@ -71,17 +73,19 @@ packlet gpr --root packages/gpr --scope kazvizian
 
 ## CLI Options
 
-| Option                                       | Description                        | Default                                         |
-| -------------------------------------------- | ---------------------------------- | ----------------------------------------------- |
-| `--root <path>`                              | Root directory of the project      | Current working directory                       |
-| `--gpr-dir <path>`                           | Staging directory for GPR package  | `.gpr` in root                                  |
-| `--artifacts <path>`                         | Output directory for tarballs      | `.artifacts` in root                            |
-| `--dist <path>`                              | Build directory                    | `dist` in root                                  |
-| `--scope <scope>`                            | GPR scope                          | `GPR_SCOPE` or `kazvizian`                      |
-| `--registry <url>`                           | GPR registry URL                   | `GPR_REGISTRY` or `https://npm.pkg.github.com/` |
-| `--name <name>`                              | Override the unscoped package name | —                                               |
-| `--include-readme` / `--no-include-readme`   | Include or exclude `README.md`     | `true`                                          |
-| `--include-license` / `--no-include-license` | Include or exclude `LICENSE`       | `true`                                          |
+| Option                                       | Description                                  | Default                                         |
+| -------------------------------------------- | -------------------------------------------- | ----------------------------------------------- |
+| `--root <path>`                              | Root directory of the project                | Current working directory                       |
+| `--gpr-dir <path>`                           | Staging directory for GPR package            | `.gpr` in root                                  |
+| `--artifacts <path>`                         | Output directory for tarballs                | `.artifacts` in root                            |
+| `--dist <path>`                              | Build directory                              | `dist` in root                                  |
+| `--scope <scope>`                            | GPR scope                                    | `GPR_SCOPE` or `kazvizian`                      |
+| `--registry <url>`                           | GPR registry URL                             | `GPR_REGISTRY` or `https://npm.pkg.github.com/` |
+| `--name <name>`                              | Override the unscoped package name           | —                                               |
+| `--include-readme` / `--no-include-readme`   | Include or exclude `README.md`               | `true`                                          |
+| `--include-license` / `--no-include-license` | Include or exclude `LICENSE`                 | `true`                                          |
+| `--json`                                     | Emit artifacts manifest JSON to stdout       | `false`                                         |
+| `--manifest <file>`                          | Also write artifacts manifest to custom file | —                                               |
 
 ## Output Structure
 
@@ -134,6 +138,8 @@ interface AwakenGprOptions {
   includeReadme?: boolean
   includeLicense?: boolean
   nameOverride?: string
+  includeReadme?: boolean
+  includeLicense?: boolean
 }
 ```
 
@@ -209,6 +215,8 @@ If you prefer a single command that performs both steps (pack + publish), a cons
 - **`dist/ not found`:** Make sure you’ve built your package first (`bun run build` or equivalent).
 - **Missing `.tgz` file:** Check the `npm pack` output — sometimes fallback names differ for scoped packages.
 - **Unexpected package name:** Use the `GPR_NAME` env variable or `--name` CLI flag to override it.
+- **Missing manifest JSON in CI:** Ensure you pass `--json` (for stdout) or `--manifest <file>` so downstream steps can locate `artifacts.json`.
+- **Extra temp directories:** Test fixtures may create `.temp/`; they clean up automatically, but you can safely add `.temp/` to `.gitignore`.
 
 ## Testing & Contributing
 
@@ -218,6 +226,8 @@ If you plan to add publishing capabilities, please include:
 - Dry-run test cases
 - Unit tests for repo/name parsing and overrides
 - Documentation that clearly explains token/2FA implications
+- Keep CLI handlers lean: `prepare` lives in `src/prepare-gpr.ts`, full `gpr` logic in `src/gpr-cli.ts`.
+- When adding new flags, update this README table and the root monorepo README.
 
 ## License
 
