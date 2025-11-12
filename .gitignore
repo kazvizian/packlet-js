@@ -9,6 +9,7 @@ dist
 .gpr
 .artifact
 .artifacts
+.tsbuildinfo
 app.config.timestamp_*.js
 app.config.timestamp_*.js
 
