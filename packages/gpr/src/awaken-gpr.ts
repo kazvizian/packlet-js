@@ -6,6 +6,7 @@ import {
   deriveScopedName,
   writeArtifactsManifest
 } from "@packlet/core"
+import { ensureGprName } from "./name-utils"
 
 /**
  * Options for awakenGpr. All paths are resolved relative to process.cwd() by default.
@@ -128,15 +129,9 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     (process.env.GPR_INCLUDE_LICENSE ?? String(opts.includeLicense ?? true)) ===
     "true"
   // Validate optional override: allow scoped (@scope/name) or unscoped (name) without spaces
-  const scopedPattern = /^@[^/]+\/[A-Za-z0-9._-]+$/
-  const unscopedPattern = /^[A-Za-z0-9._-]+$/
   const overrideRaw =
     process.env.GPR_NAME || opts.nameOverride || rootPkg.packlet?.gprName
-  const NAME_OVERRIDE =
-    overrideRaw &&
-    (scopedPattern.test(overrideRaw) || unscopedPattern.test(overrideRaw))
-      ? overrideRaw
-      : undefined
+  const NAME_OVERRIDE = ensureGprName(overrideRaw)
 
   // In CI on Windows, spawning `npm pack` is slow and flaky. Allow opt-out via env
   // and auto-disable in Windows CI to keep tests fast and deterministic.
@@ -196,10 +191,7 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
           }
           if (pkgJson.name && pkgJson.version) {
             const ovr = pkgJson.packlet?.gprName
-            const validOverride =
-              ovr && (scopedPattern.test(ovr) || unscopedPattern.test(ovr))
-                ? ovr
-                : undefined
+            const validOverride = ensureGprName(ovr)
             const scoped = deriveScopedName({
               name: pkgJson.name,
               override: validOverride,

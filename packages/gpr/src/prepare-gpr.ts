@@ -3,6 +3,7 @@ import path from "node:path"
 import { writeArtifactsManifest } from "@packlet/core"
 import type { AwakenGprOptions } from "./awaken-gpr"
 import { awakenGpr } from "./awaken-gpr"
+import { ensureGprName } from "./name-utils"
 
 /**
  * Handle the `prepare` CLI subcommand.
@@ -46,13 +47,7 @@ export function handlePrepare(opts: Record<string, unknown>): void {
     // Optional gprName override: allow either scoped (@scope/name) or unscoped (name)
     // Let awakenGpr/deriveScopedName apply the scope when unscoped is provided.
     let nameOverride = (opts.name as string) || pkg.packlet.gprName
-    const scopedPattern = /^@[^/]+\/[A-Za-z0-9._-]+$/
-    const unscopedPattern = /^[A-Za-z0-9._-]+$/
-    if (
-      nameOverride &&
-      !scopedPattern.test(nameOverride) &&
-      !unscopedPattern.test(nameOverride)
-    ) {
+    if (nameOverride && !ensureGprName(nameOverride)) {
       console.warn(
         `[gpr:prepare] invalid gprName '${nameOverride}' (expected @scope/name or unscoped base); ignoring override.`
       )
