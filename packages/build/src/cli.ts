@@ -5,12 +5,14 @@ function parseArgv(argv: string[]) {
   const opts: Record<string, unknown> = {
     entry: "src/index.ts",
     outdir: "dist",
-    formats: "esm,cjs",
-    sourcemap: "inline",
+    formats: "esm",
+    sourcemap: "none",
     types: true,
     target: "node",
     execCjs: false,
-    minify: true
+    minify: true,
+    external: undefined as unknown,
+    externalAuto: false as boolean
   }
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i]
@@ -19,11 +21,29 @@ function parseArgv(argv: string[]) {
     else if (a === "--outdir") opts.outdir = argv[++i]
     else if (a === "--formats") opts.formats = argv[++i]
     else if (a === "--sourcemap") opts.sourcemap = argv[++i]
-    else if (a === "--no-types") opts.types = false
+    else if (a === "--cjs") {
+      // convenience flag: include cjs alongside current formats
+      const current = String(opts.formats)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+      if (!current.includes("cjs")) current.push("cjs")
+      opts.formats = current.join(",")
+      opts.execCjs = true
+    } else if (a === "--no-types") opts.types = false
     else if (a === "--target") opts.target = argv[++i]
     else if (a === "--exec-cjs") opts.execCjs = true
     else if (a === "--no-minify") opts.minify = false
     else if (a === "--minify") opts.minify = true
+    else if (a === "--external") {
+      const v = argv[++i]
+      const list = String(v)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+      const prev = (opts.external as string[] | undefined) ?? []
+      opts.external = [...prev, ...list]
+    } else if (a === "--external-auto") opts.externalAuto = true
     else {
       console.error(`Unknown arg: ${a}`)
       process.exit(2)
@@ -38,15 +58,24 @@ async function main() {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean) as ("esm" | "cjs")[]
+  const external = parsed.externalAuto
+    ? "auto"
+    : (parsed.external as string[] | undefined)
   await build({
     entry: String(parsed.entry),
     outdir: String(parsed.outdir),
     formats,
-    sourcemap: parsed.sourcemap === "none" ? "none" : "inline",
+    sourcemap: ((): "inline" | "external" | "none" => {
+      const sm = String(parsed.sourcemap)
+      if (sm === "inline") return "inline" // will coerce to external internally
+      if (sm === "external") return "external"
+      return "none"
+    })(),
     types: Boolean(parsed.types),
     target: String(parsed.target),
     execCjs: Boolean(parsed.execCjs),
-    minify: Boolean(parsed.minify)
+    minify: Boolean(parsed.minify),
+    external
   })
 }
 
