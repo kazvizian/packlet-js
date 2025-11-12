@@ -135,8 +135,6 @@ interface AwakenGprOptions {
   distDir?: string
   scope?: string
   registry?: string
-  includeReadme?: boolean
-  includeLicense?: boolean
   nameOverride?: string
 }
 ```
