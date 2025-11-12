@@ -10,7 +10,14 @@
  * test run and performs file-system based assertions against temporary
  * fixture directories.
  */
-import { afterEach, beforeEach, describe, expect, it } from "bun:test"
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it
+} from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -29,6 +36,10 @@ function touch(p: string, content = "") {
 
 describe("awakenGpr", () => {
   const originalCwd = process.cwd()
+  beforeAll(() => {
+    // Speed up tests and avoid spawning npm pack on CI/Windows
+    process.env.GPR_SKIP_PACK = "true"
+  })
   beforeEach(() => {
     // no module reset needed in bun:test context
   })

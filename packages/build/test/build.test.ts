@@ -86,6 +86,11 @@ describe("@packlet/build programmatic API", () => {
     const cjsPath = path.join(tmp, "dist/index.cjs")
     const target = fs.existsSync(mjsPath) ? mjsPath : cjsPath
     const stat = fs.statSync(target)
-    expect((stat.mode & 0o111) !== 0).toBe(true)
+    if (process.platform === "win32") {
+      // Windows doesn't have POSIX execute bits; chmod is a no-op. Just assert file exists.
+      expect(stat.isFile()).toBe(true)
+    } else {
+      expect((stat.mode & 0o111) !== 0).toBe(true)
+    }
   }, 20000)
 })

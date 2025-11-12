@@ -5,7 +5,7 @@
  * fixture, produce packed artifacts (with `npm pack` stubbed) and emit the
  * artifacts manifest JSON when `--json` is specified.
  */
-import { describe, expect, it } from "bun:test"
+import { beforeAll, describe, expect, it } from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -14,6 +14,10 @@ import { runCli } from "../src/index"
 //
 
 describe("cli gpr command", () => {
+  beforeAll(() => {
+    // Speed up tests and avoid Windows timing issues with real npm pack
+    process.env.GPR_SKIP_PACK = "true"
+  })
   /**
    * End-to-end CLI test for `gpr` command.
    *
@@ -39,8 +43,10 @@ describe("cli gpr command", () => {
     const child =
       require("node:child_process") as typeof import("node:child_process")
     const originalExecSync = child.execSync
-    child.execSync = (() =>
-      Buffer.from("cli-test-0.1.0.tgz\n")) as unknown as typeof originalExecSync
+    child.execSync = ((cmd: string) => {
+      if (cmd.includes("npm pack")) return Buffer.from("cli-test-0.1.0.tgz\n")
+      return Buffer.from("")
+    }) as unknown as typeof originalExecSync
 
     const output: string[] = []
     const origWrite = process.stdout.write
@@ -62,7 +68,6 @@ describe("cli gpr command", () => {
     expect(manifest.version).toBe("0.1.0")
     // restore stdout
     process.stdout.write = origWrite
-    // restore execSync
     child.execSync = originalExecSync
   })
 })
