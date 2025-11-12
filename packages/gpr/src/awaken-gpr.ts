@@ -109,6 +109,11 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     author?: { name?: string; email?: string; url?: string } | string
     keywords?: string[]
     sideEffects?: boolean
+    bin?: string | Record<string, string>
+    engines?: Record<string, string>
+    dependencies?: Record<string, string>
+    peerDependencies?: Record<string, string>
+    optionalDependencies?: Record<string, string>
   }
 
   // Env-based configuration for reusability
@@ -144,6 +149,89 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     override: NAME_OVERRIDE,
     scope: SCOPE
   })
+
+  // Build a map of internal monorepo packages (name -> { version, gprName }) when running inside
+  // a conventional packages/* workspace. This helps rewrite workspace:* deps to concrete versions
+  // and remap internal names to their GPR-scoped counterparts.
+  const internalMap: Record<
+    string,
+    { version: string; gprName: string; gprEnabled: boolean }
+  > = {}
+  const maybePackagesDir =
+    path.basename(path.dirname(root)) === "packages"
+      ? path.dirname(root)
+      : undefined
+  if (maybePackagesDir && fs.existsSync(maybePackagesDir)) {
+    for (const entry of fs.readdirSync(maybePackagesDir)) {
+      const pkgDir = path.join(maybePackagesDir, entry)
+      const pkgJsonPath = path.join(pkgDir, "package.json")
+      try {
+        if (fs.existsSync(pkgJsonPath)) {
+          const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8")) as {
+            name?: string
+            version?: string
+            packlet?: { gpr?: boolean }
+          }
+          if (pkgJson.name && pkgJson.version) {
+            const scoped = deriveScopedName({
+              name: pkgJson.name,
+              scope: SCOPE
+            }).scopedName
+            internalMap[pkgJson.name] = {
+              version: pkgJson.version,
+              gprName: scoped,
+              gprEnabled: Boolean(pkgJson.packlet?.gpr)
+            }
+          }
+        }
+      } catch {
+        // ignore malformed packages
+      }
+    }
+  }
+
+  // Helper to normalize workspace:* ranges to concrete semver compatible ranges.
+  function normalizeWorkspaceRange(
+    depName: string,
+    raw: string
+  ): { name: string; range: string } {
+    const info = internalMap[depName]
+    // Map workspace protocol to actual version range
+    const toRange = (def: string) => `^${def}`
+    let range = raw
+    if (raw.startsWith("workspace:")) {
+      const spec = raw.slice("workspace:".length)
+      if (info) {
+        // Treat workspace:* / ^ / ~ the same and pin to ^internalVersion
+        range = toRange(info.version)
+      } else if (spec.startsWith("link:")) {
+        // best-effort: link: is local-only; fall back to "*"
+        range = "*"
+      } else if (spec === "*" || spec === "^" || spec === "~") {
+        range = "*"
+      } else if (spec) {
+        // explicit semver under workspace: — use it sans prefix
+        range = spec
+      } else {
+        range = "*"
+      }
+    }
+    // If dependency is internal and has GPR enabled, rewrite the name to the GPR scoped name
+    const name = info?.gprEnabled ? info.gprName : depName
+    return { name, range }
+  }
+
+  function rewriteDeps(
+    input?: Record<string, string>
+  ): Record<string, string> | undefined {
+    if (!input) return undefined
+    const out: Record<string, string> = {}
+    for (const [dep, ver] of Object.entries(input)) {
+      const { name, range } = normalizeWorkspaceRange(dep, ver)
+      out[name] = range
+    }
+    return Object.keys(out).length ? out : undefined
+  }
   const gprPkg = {
     name: scopedName,
     version: rootPkg.version,
@@ -154,6 +242,11 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     author: rootPkg.author,
     keywords: rootPkg.keywords,
     sideEffects: rootPkg.sideEffects,
+    bin: rootPkg.bin,
+    engines: rootPkg.engines,
+    dependencies: rewriteDeps(rootPkg.dependencies),
+    peerDependencies: rewriteDeps(rootPkg.peerDependencies),
+    optionalDependencies: rewriteDeps(rootPkg.optionalDependencies),
     files: ["dist"],
     main: "./dist/index.js",
     module: "./dist/index.mjs",
