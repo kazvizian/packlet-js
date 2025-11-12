@@ -138,8 +138,6 @@ interface AwakenGprOptions {
   includeReadme?: boolean
   includeLicense?: boolean
   nameOverride?: string
-  includeReadme?: boolean
-  includeLicense?: boolean
 }
 ```
 
