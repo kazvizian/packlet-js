@@ -50,7 +50,7 @@ export async function runCli(
       "--exec-js",
       "chmod +x built entry (prefers dist/index.mjs; falls back to dist/index.cjs)"
     )
-    .option("--cjs", "Also emit CommonJS output and mark it executable")
+    .option("--cjs", "Also emit CommonJS output")
     .option("--no-minify", "Disable minification")
     .action(async (opts: Record<string, unknown>) => {
       const formats = String(opts.formats || "esm")
@@ -71,9 +71,7 @@ export async function runCli(
           })(),
           types: (opts.types as boolean) ?? true,
           target: (opts.target as string) || "node",
-          execJs:
-            Boolean((opts as Record<string, unknown>).execJs) ||
-            Boolean(opts.cjs),
+          execJs: Boolean((opts as Record<string, unknown>).execJs),
           minify: (opts.minify as boolean) ?? true
         }
         await buildPacklet(buildOpts)

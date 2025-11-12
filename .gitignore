@@ -12,6 +12,7 @@ dist
 .tsbuildinfo
 app.config.timestamp_*.js
 app.config.timestamp_*.js
+.tsbuildinfo
 
 # Environment
 .env
