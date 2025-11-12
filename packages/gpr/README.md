@@ -185,7 +185,7 @@ All unscoped base names are combined with the selected scope (default `kazvizian
 
 ### Internal dependency version normalization (monorepo)
 
-When staging a GPR variant in a monorepo, internal dependency NAMES are left unchanged (original npm names).
+When staging a GPR variant in a monorepo, internal dependency names are left unchanged (original npm names).
 Only version ranges using the `workspace:` protocol are normalized to concrete semver ranges, typically
 pinning to `^<internalVersion>` for `dependencies`, `peerDependencies`, and `optionalDependencies`.
 If a sibling package defines `packlet.gprName`, that affects only how THIS package itself is named for GPR,
