@@ -50,7 +50,8 @@
     "package"
   ],
   "packlet": {
-    "gpr": true
+    "gpr": true,
+    "gprName": "packlet-core"
   },
   "publishConfig": {
     "access": "public",

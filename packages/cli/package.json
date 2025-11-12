@@ -48,7 +48,8 @@
     "@packlet/build": "workspace:*"
   },
   "packlet": {
-    "gpr": true
+    "gpr": true,
+    "gprName": "packlet-cli"
   },
   "publishConfig": {
     "access": "public",

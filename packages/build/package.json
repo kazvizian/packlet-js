@@ -46,7 +46,8 @@
     "provenance": true
   },
   "packlet": {
-    "gpr": true
+    "gpr": true,
+    "gprName": "packlet-build"
   },
   "engines": {
     "bun": ">=1.2.0",
