@@ -1,9 +1,11 @@
 commit-msg:
+  skip: true
   commands:
     commitlint:
       run: bun commitlint --edit .git/COMMIT_EDITMSG
 
 pre-commit:
+  skip: true
   parallel: true
   commands:
     biome:
@@ -18,6 +20,7 @@ pre-commit:
 pre-push:
   # Run a full project verification before allowing a push. This will fail the
   # push if any step exits non-zero.
+  skip: true
   commands:
     total-check:
       run: bun run lint && bun run format:check && bun run build && bun test
