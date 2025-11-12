@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import { type BuildOptions, build as buildPacklet } from "@packlet/build"
 import {
   listArtifacts,
@@ -198,11 +199,22 @@ export async function runCli(
   await program.parseAsync(argv)
 }
 
-// Execute when run directly (guard for ESM environments like Bun where `module` may be undefined)
-if (
+// Execute when run directly:
+// - CommonJS: require.main === module
+// - ESM: import.meta.url matches the executed file (argv[1])
+const isCjsMain =
   typeof require !== "undefined" &&
   typeof module !== "undefined" &&
   require.main === module
-) {
-  void runCli()
-}
+const isEsmMain = (() => {
+  try {
+    const invoked = process.argv[1]
+    if (!invoked) return false
+    const invokedUrl = pathToFileURL(invoked).href
+    return import.meta && import.meta.url === invokedUrl
+  } catch {
+    return false
+  }
+})()
+
+if (isCjsMain || isEsmMain) void runCli()
