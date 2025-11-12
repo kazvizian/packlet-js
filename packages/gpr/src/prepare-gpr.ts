@@ -43,12 +43,18 @@ export function handlePrepare(opts: Record<string, unknown>): void {
       return
     }
 
-    // Validate optional gprName override (must be @scope/name)
+    // Optional gprName override: allow either scoped (@scope/name) or unscoped (name)
+    // Let awakenGpr/deriveScopedName apply the scope when unscoped is provided.
     let nameOverride = (opts.name as string) || pkg.packlet.gprName
     const scopedPattern = /^@[^/]+\/[A-Za-z0-9._-]+$/
-    if (nameOverride && !scopedPattern.test(nameOverride)) {
+    const unscopedPattern = /^[A-Za-z0-9._-]+$/
+    if (
+      nameOverride &&
+      !scopedPattern.test(nameOverride) &&
+      !unscopedPattern.test(nameOverride)
+    ) {
       console.warn(
-        `[gpr:prepare] invalid gprName '${nameOverride}' (expected @scope/name); ignoring override.`
+        `[gpr:prepare] invalid gprName '${nameOverride}' (expected @scope/name or unscoped base); ignoring override.`
       )
       nameOverride = undefined
     }
