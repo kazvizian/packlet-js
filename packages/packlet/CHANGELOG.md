@@ -1,5 +1,13 @@
 # Packlet (Aggregate Changelog)
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [1099c2b]
+  - @packlet/cli@0.2.1
+  - @packlet/gpr@0.1.2
+
 ## 0.2.0
 
 ### Minor Changes
