@@ -22,14 +22,14 @@ function parseArgv(argv: string[]) {
     else if (a === "--formats") opts.formats = argv[++i]
     else if (a === "--sourcemap") opts.sourcemap = argv[++i]
     else if (a === "--cjs") {
-      // convenience flag: include cjs alongside current formats
+      // convenience flag: include cjs alongside current formats (does not set execJs)
       const current = String(opts.formats)
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean)
       if (!current.includes("cjs")) current.push("cjs")
       opts.formats = current.join(",")
-      opts.execJs = true
+      // opts.execJs is no longer set by --cjs; use --exec-js to control executability
     } else if (a === "--no-types") opts.types = false
     else if (a === "--target") opts.target = argv[++i]
     else if (a === "--exec-js") opts.execJs = true
