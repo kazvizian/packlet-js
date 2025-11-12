@@ -88,7 +88,6 @@ Flags accepted by both `packlet build` and `packlet-build build`:
 Notes:
 
 - Declarations are emitted with `tsc --emitDeclarationOnly` using your local `tsconfig.json`.
-- Declarations are emitted with `tsc --emitDeclarationOnly` using your local `tsconfig.json`.
 - Sourcemaps are disabled by default for release builds. If you need sourcemaps for debugging, prefer `--sourcemap external` (we coerce `inline` to `external` to avoid embedding large inline maps in published bundles).
 - Prefer `--no-minify` while debugging locally.
 
