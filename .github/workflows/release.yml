@@ -32,7 +32,7 @@ jobs:
         run: bun run build
 
       - name: Test
-        run: bun run test --continue || bun run test
+        run: bun run test
 
       - name: Version and Publish via Changesets
         uses: changesets/action@v1
