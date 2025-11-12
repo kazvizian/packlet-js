@@ -1,5 +1,11 @@
 # @packlet/core
 
+## 0.1.2
+
+### Patch Changes
+
+- 65523e5: Small addition: accepts the `packlet.gprName` field in package metadata (no behavior change beyond allowing the field).
+
 ## 0.1.1
 
 ### Patch Changes

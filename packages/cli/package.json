@@ -1,6 +1,6 @@
 {
   "name": "@packlet/cli",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Umbrella CLI for packlet utilities (gpr, validate, list-artifacts).",
   "license": "MIT",
   "homepage": "https://github.com/kazvizian/packlet-js",

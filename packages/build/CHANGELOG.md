@@ -1,5 +1,11 @@
 # @packlet/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- 65523e5: Small addition: accepts the `packlet.gprName` field in package metadata (no behavior change beyond allowing the field).
+
 ## 0.2.0
 
 ### Minor Changes
