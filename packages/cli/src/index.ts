@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs"
 import path from "node:path"
-import { build as buildPacklet } from "@packlet/build"
+import { type BuildOptions, build as buildPacklet } from "@packlet/build"
 import {
   listArtifacts,
   validateDist,
@@ -34,31 +34,49 @@ export async function runCli(
 
   program
     .command("build")
-    .description("Build ESM+CJS and emit types for current package")
+    .description(
+      "Build ESM (default) and emit types for current package; add CJS via --cjs"
+    )
     .option("--entry <file>", "Entry file (default: src/index.ts)")
     .option("--outdir <dir>", "Output directory (default: dist)")
-    .option("--formats <list>", "Comma-separated: esm,cjs (default: esm,cjs)")
-    .option("--sourcemap <kind>", "inline | none (default: inline)")
+    .option("--formats <list>", "Comma-separated: esm,cjs (default: esm)")
+    .option(
+      "--sourcemap <kind>",
+      "external | none (default: none). 'inline' is coerced to external."
+    )
     .option("--no-types", "Skip emitting .d.ts")
     .option("--target <target>", "Build target (default: node)")
-    .option("--exec-cjs", "chmod +x dist/index.cjs (for CLIs)")
+    .option(
+      "--exec-js",
+      "chmod +x built entry (prefers dist/index.mjs; falls back to dist/index.cjs)"
+    )
+    .option("--cjs", "Also emit CommonJS output and mark it executable")
     .option("--no-minify", "Disable minification")
     .action(async (opts: Record<string, unknown>) => {
-      const formats = String(opts.formats || "esm,cjs")
+      const formats = String(opts.formats || "esm")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean) as ("esm" | "cjs")[]
+      if (opts.cjs && !formats.includes("cjs")) formats.push("cjs")
       try {
-        await buildPacklet({
+        const buildOpts: BuildOptions = {
           entry: (opts.entry as string) || "src/index.ts",
           outdir: (opts.outdir as string) || "dist",
           formats,
-          sourcemap: (opts.sourcemap as string) === "none" ? "none" : "inline",
+          sourcemap: ((): "inline" | "external" | "none" => {
+            const sm = String(opts.sourcemap || "none")
+            if (sm === "inline") return "inline" // coerced to external downstream
+            if (sm === "external") return "external"
+            return "none"
+          })(),
           types: (opts.types as boolean) ?? true,
           target: (opts.target as string) || "node",
-          execCjs: Boolean(opts.execCjs),
+          execJs:
+            Boolean((opts as Record<string, unknown>).execJs) ||
+            Boolean(opts.cjs),
           minify: (opts.minify as boolean) ?? true
-        })
+        }
+        await buildPacklet(buildOpts)
       } catch (err) {
         console.error(err instanceof Error ? err.message : String(err))
         process.exitCode = 1
