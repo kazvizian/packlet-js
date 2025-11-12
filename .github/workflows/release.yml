@@ -75,7 +75,7 @@ jobs:
                 pushd "$pkg/.gpr" >/dev/null
                 npm publish --access public || npm publish
                 popd >/dev/null
-              } else {
+              else
                 echo "Skipping $pkg: .gpr not created"
                 continue
               fi
