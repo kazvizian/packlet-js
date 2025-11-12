@@ -13,7 +13,6 @@
     "noEmit": true,
     "verbatimModuleSyntax": true,
     "composite": true,
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo"
+    "incremental": true
   }
 }
