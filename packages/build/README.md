@@ -15,10 +15,10 @@
 
 Lightweight, general-purpose build wrapper for TypeScript/JavaScript packages.
 
-- Outputs ESM and CJS: `dist/index.mjs`, `dist/index.cjs`
+- Outputs ESM by default: `dist/index.mjs` (CJS available via `--cjs`)
 - Emits TypeScript declarations to `dist/` via `tsc`
-- Minify on by default; inline sourcemaps by default (tweakable)
-- Works in any Node/Bun project, inside or outside this monorepo
+- Minify on by default; sourcemaps are disabled by default (enable external maps explicitly)
+- Works in any Node/Bun project
 - Powers `packlet build` in the umbrella CLI
 
 ## Install
@@ -40,17 +40,17 @@ Use the provided binary or the umbrella CLI:
 ```json
 {
   "scripts": {
-    "build": "bun x packlet-build build",
-    "build:cli": "bun x packlet-build build --exec-cjs"
+    "build": "bun x packlet-build build --sourcemap none --external-auto",
+    "build:cli": "bun x packlet-build build --cjs --exec-js --sourcemap none --external-auto"
   }
 }
 ```
 
-Or via the umbrella CLI if you already use `packlet`:
+Or via the umbrella CLI if you already use [`packlet`](https://npmjs.com/package/packlet):
 
 ```fish
 packlet build
-packlet build --exec-cjs
+packlet build --exec-js
 ```
 
 ## Programmatic API
@@ -60,11 +60,11 @@ import { build } from "@packlet/build"
 await build({
   entry: "src/index.ts",
   outdir: "dist",
-  formats: ["esm", "cjs"],
-  sourcemap: "inline",
+  formats: ["esm"], // default
+  sourcemap: "none",
   types: true,
   target: "node",
-  execCjs: false,
+  execJs: false,
   minify: true
 })
 ```
@@ -75,17 +75,19 @@ Flags accepted by both `packlet build` and `packlet-build build`:
 
 - `--entry <file>`: default `src/index.ts`
 - `--outdir <dir>`: default `dist`
-- `--formats <list>`: default `esm,cjs`
-- `--sourcemap <kind>`: `inline` | `none` (default `inline`)
+- `--formats <list>`: default `esm` (use `--cjs` or `--formats esm,cjs` to also emit CJS)
+- `--sourcemap <kind>`: `external` | `none` (default `none`)
 - `--no-types`: skip `.d.ts` emission
 - `--target <target>`: default `node`
-- `--exec-cjs`: mark `dist/index.cjs` executable (for CLIs)
+- `--exec-js`: mark `dist/index.mjs` or `dist/index.cjs` executable (for CLIs)
+- `--cjs`: convenience flag to also emit `index.cjs` and imply `--exec-js`
 - `--no-minify`: disable minification
 
 Notes:
 
 - Declarations are emitted with `tsc --emitDeclarationOnly` using your local `tsconfig.json`.
-- For small, single-file outputs we use inline sourcemaps by default.
+- Declarations are emitted with `tsc --emitDeclarationOnly` using your local `tsconfig.json`.
+- Sourcemaps are disabled by default for release builds. If you need sourcemaps for debugging, prefer `--sourcemap external` (we coerce `inline` to `external` to avoid embedding large inline maps in published bundles).
 - Prefer `--no-minify` while debugging locally.
 
 ## License
