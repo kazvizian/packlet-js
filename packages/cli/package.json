@@ -34,8 +34,7 @@
     }
   },
   "scripts": {
-    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
-    "lint": "eslint \"src/**/*.ts\" --ext .ts",
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto --exec-js",
     "test": "bun test",
     "clean": "rm -rf dist .tsbuildinfo"
   },

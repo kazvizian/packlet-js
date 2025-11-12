@@ -34,9 +34,8 @@
     }
   },
   "scripts": {
-    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto --exec-js",
     "clean": "rm -rf dist .tsbuildinfo",
-    "prepublishOnly": "bun run clean && bun run build",
     "test": "bun test"
   },
   "dependencies": {
