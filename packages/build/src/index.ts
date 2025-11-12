@@ -9,7 +9,11 @@ export type BuildOptions = {
   sourcemap?: "inline" | "external" | "none"
   types?: boolean
   target?: string
-  execCjs?: boolean
+  /**
+   * Mark the built JavaScript entry as executable (chmod +x).
+   * If true, prefers mjs when present; falls back to cjs when only cjs is emitted.
+   */
+  execJs?: boolean
   minify?: boolean
   /**
    * Externalize dependencies instead of bundling them.
@@ -26,7 +30,7 @@ type ResolvedBuildOptions = {
   sourcemap: "inline" | "external" | "none"
   types: boolean
   target: string
-  execCjs: boolean
+  execJs: boolean
   minify: boolean
   external?: string[] | "auto"
 }
@@ -59,7 +63,7 @@ export async function build(options: BuildOptions = {}): Promise<void> {
     sourcemap: options.sourcemap ?? "none",
     types: options.types ?? true,
     target: options.target ?? "node",
-    execCjs: options.execCjs ?? false,
+    execJs: options.execJs ?? false,
     minify: options.minify ?? true,
     external: options.external ?? undefined
   }
@@ -124,10 +128,23 @@ export async function build(options: BuildOptions = {}): Promise<void> {
     ])
   }
 
-  if (opts.execCjs) {
-    try {
-      fs.chmodSync(path.join(outdir, "index.cjs"), 0o755)
-    } catch {}
+  if (opts.execJs) {
+    const preferred: Array<{ name: string; present: boolean }> = [
+      {
+        name: "index.mjs",
+        present: fs.existsSync(path.join(outdir, "index.mjs"))
+      },
+      {
+        name: "index.cjs",
+        present: fs.existsSync(path.join(outdir, "index.cjs"))
+      }
+    ]
+    const targetFile = preferred.find((p) => p.present)?.name
+    if (targetFile) {
+      try {
+        fs.chmodSync(path.join(outdir, targetFile), 0o755)
+      } catch {}
+    }
   }
 }
 

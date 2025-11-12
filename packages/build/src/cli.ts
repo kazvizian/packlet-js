@@ -9,7 +9,7 @@ function parseArgv(argv: string[]) {
     sourcemap: "none",
     types: true,
     target: "node",
-    execCjs: false,
+    execJs: false,
     minify: true,
     external: undefined as unknown,
     externalAuto: false as boolean
@@ -29,10 +29,10 @@ function parseArgv(argv: string[]) {
         .filter(Boolean)
       if (!current.includes("cjs")) current.push("cjs")
       opts.formats = current.join(",")
-      opts.execCjs = true
+      opts.execJs = true
     } else if (a === "--no-types") opts.types = false
     else if (a === "--target") opts.target = argv[++i]
-    else if (a === "--exec-cjs") opts.execCjs = true
+    else if (a === "--exec-js") opts.execJs = true
     else if (a === "--no-minify") opts.minify = false
     else if (a === "--minify") opts.minify = true
     else if (a === "--external") {
@@ -73,7 +73,7 @@ async function main() {
     })(),
     types: Boolean(parsed.types),
     target: String(parsed.target),
-    execCjs: Boolean(parsed.execCjs),
+    execJs: Boolean(parsed.execJs),
     minify: Boolean(parsed.minify),
     external
   })

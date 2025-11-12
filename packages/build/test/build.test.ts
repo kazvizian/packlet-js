@@ -32,7 +32,7 @@ function writeSrc(dir: string, code = "export const x=1\n") {
 }
 
 describe("@packlet/build programmatic API", () => {
-  it("builds esm+cjs+d.ts to dist by default", async () => {
+  it("builds esm+d.ts to dist by default (CJS opt-in)", async () => {
     const tmp = mkTmp()
     writeFixtureTsconfig(tmp)
     writeSrc(tmp, "export const hello=(n:string)=>'hi '+n\n")
@@ -46,7 +46,7 @@ describe("@packlet/build programmatic API", () => {
     }
 
     expect(fs.existsSync(path.join(tmp, "dist/index.mjs"))).toBe(true)
-    expect(fs.existsSync(path.join(tmp, "dist/index.cjs"))).toBe(true)
+    expect(fs.existsSync(path.join(tmp, "dist/index.cjs"))).toBe(false)
     expect(fs.existsSync(path.join(tmp, "dist/index.d.ts"))).toBe(true)
   }, 20000)
 
@@ -68,7 +68,7 @@ describe("@packlet/build programmatic API", () => {
     expect(fs.existsSync(path.join(tmp, "dist/index.d.ts"))).toBe(false)
   }, 20000)
 
-  it("marks dist/index.cjs executable when execCjs is true", async () => {
+  it("marks built entry executable (prefers mjs, falls back to cjs)", async () => {
     const tmp = mkTmp()
     writeFixtureTsconfig(tmp)
     writeSrc(tmp)
@@ -76,13 +76,16 @@ describe("@packlet/build programmatic API", () => {
     const cwd0 = process.cwd()
     try {
       process.chdir(tmp)
-      await build({ execCjs: true })
+      await build({ execJs: true, formats: ["esm", "cjs"] })
     } finally {
       process.chdir(cwd0)
     }
 
-    const stat = fs.statSync(path.join(tmp, "dist/index.cjs"))
-    // Check any execute bit is set
+    // Prefer mjs; ensure at least one entry got execute bits
+    const mjsPath = path.join(tmp, "dist/index.mjs")
+    const cjsPath = path.join(tmp, "dist/index.cjs")
+    const target = fs.existsSync(mjsPath) ? mjsPath : cjsPath
+    const stat = fs.statSync(target)
     expect((stat.mode & 0o111) !== 0).toBe(true)
   }, 20000)
 })
