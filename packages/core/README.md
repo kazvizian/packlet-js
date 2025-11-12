@@ -37,6 +37,8 @@ import {
 
 const { baseName, scopedName } = deriveScopedName({
   name: "my-lib",
+  // override can be unscoped ("packlet-core") or fully scoped ("@acme/packlet-core")
+  override: "packlet-core",
   scope: "acme"
 })
 console.log(scopedName) // -> @acme/my-lib
@@ -57,7 +59,9 @@ writeArtifactsManifest("./.artifacts", {
 - `listArtifacts(dir)`: returns array of `{ file, size, sha512 }` for `*.tgz` files.
 - `writeArtifactsManifest(dir, data)`: writes `artifacts.json` (schema v1) and returns the manifest.
 - `validateDist({ distDir, expected? })`: checks for `index.js`, `index.mjs`, `index.d.ts` by default, returns `{ ok, missing }`.
-- `deriveScopedName({ name, repoUrl?, override?, scope? })`: derives a base and scoped name; uses `override` verbatim if scoped.
+- `deriveScopedName({ name, repoUrl?, override?, scope? })`: derives a base and scoped name.
+  - If `override` is fully scoped, it is used verbatim.
+  - If `override` is unscoped, `scope` is applied to form `@<scope>/<override>`.
 
 Edge cases:
 

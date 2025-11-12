@@ -19,6 +19,7 @@
 It focuses on **deterministic**, **local**, and **CI-friendly** workflows:
 
 - Prepares a _scoped_ package (e.g. `@<scope>/<name>`) based on your project metadata.
+- Supports monorepo-friendly naming and a per-package override via `packlet.gprName` in `package.json`.
 - Copies build output (`dist/`) into a staging area `.gpr/` and generates `.tgz` tarballs for release.
 
 The package provides two interfaces:
@@ -81,7 +82,7 @@ packlet gpr --root packages/gpr --scope kazvizian
 | `--dist <path>`                              | Build directory                              | `dist` in root                                  |
 | `--scope <scope>`                            | GPR scope                                    | `GPR_SCOPE` or `kazvizian`                      |
 | `--registry <url>`                           | GPR registry URL                             | `GPR_REGISTRY` or `https://npm.pkg.github.com/` |
-| `--name <name>`                              | Override the unscoped package name           | —                                               |
+| `--name <name>`                              | Override package name (scoped or unscoped)   | Reads `packlet.gprName` if present              |
 | `--include-readme` / `--no-include-readme`   | Include or exclude `README.md`               | `true`                                          |
 | `--include-license` / `--no-include-license` | Include or exclude `LICENSE`                 | `true`                                          |
 | `--json`                                     | Emit artifacts manifest JSON to stdout       | `false`                                         |
@@ -102,7 +103,27 @@ packlet gpr --root packages/gpr --scope kazvizian
 | `GPR_REGISTRY`        | Default registry URL                 | `https://npm.pkg.github.com/` |
 | `GPR_INCLUDE_README`  | Include `README.md` (`true`/`false`) | `true`                        |
 | `GPR_INCLUDE_LICENSE` | Include `LICENSE` (`true`/`false`)   | `true`                        |
-| `GPR_NAME`            | Override unscoped package name       | `my-lib`                      |
+| `GPR_NAME`            | Override name (scoped or unscoped)   | `packlet-core` or `@acme/x`   |
+
+## Package.json configuration
+
+You can configure GPR behavior per package using a `packlet` block in `package.json`:
+
+```jsonc
+{
+  "packlet": {
+    "gpr": true,
+    // Optional override; can be unscoped ("packlet-core") or fully scoped ("@acme/packlet-core").
+    "gprName": "packlet-core"
+  }
+}
+```
+
+Rules:
+
+- If `gprName` is unscoped, the CLI applies `--scope` (or `GPR_SCOPE`) automatically, e.g. `@kazvizian/packlet-core`.
+- If `gprName` is fully scoped, it will be used verbatim.
+- Invalid values (e.g. containing spaces) are ignored with a warning.
 
 ## API Usage (Programmatic)
 
@@ -139,16 +160,36 @@ interface AwakenGprOptions {
 }
 ```
 
-## Package Naming Behavior (Important)
+## Package naming behavior (important)
 
-Sometimes, the name in `package.json` differs from the GitHub repository name.
-To avoid mismatches when publishing to GPR, `awakenGpr` determines the final package name in this order:
+Name resolution differs slightly for single-package repos vs monorepos:
 
-1. `GPR_NAME` or the `nameOverride` option (if provided).
-2. Repository name parsed from `package.json.repository`
-   (e.g., `https://github.com/owner/repo` → `repo`).
-   This helps when the npm package name (`@foo/bar`) differs from the GitHub repo name.
-3. Fallback: `package.json.name` (scope automatically stripped if present).
+Priority used by `awakenGpr`:
+
+1. Explicit overrides
+
+- `packlet.gprName` in `package.json` (scoped or unscoped), or
+- `--name` flag / `GPR_NAME` env (scoped or unscoped)
+
+2. Monorepos: prefer the package's own name
+
+- In a monorepo (e.g. `packages/*`), the base name comes from `package.json.name` (scope stripped).
+
+3. Single-package repos: repo or package name
+
+- If not in a monorepo and `repository.url` is present, the repo name may be used as base
+  when it differs from `package.json.name`.
+- Otherwise, fall back to `package.json.name` (scope stripped).
+
+All unscoped base names are combined with the selected scope (default `kazvizian`) to produce `@<scope>/<base>`.
+
+### Internal dependency version normalization (monorepo)
+
+When staging a GPR variant in a monorepo, internal dependency NAMES are left unchanged (original npm names).
+Only version ranges using the `workspace:` protocol are normalized to concrete semver ranges, typically
+pinning to `^<internalVersion>` for `dependencies`, `peerDependencies`, and `optionalDependencies`.
+If a sibling package defines `packlet.gprName`, that affects only how THIS package itself is named for GPR,
+not how its dependencies are referenced.
 
 ## CI Example (GitHub Actions)
 

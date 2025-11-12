@@ -111,13 +111,27 @@ Running `packlet gpr` generates `<root>/.artifacts/artifacts.json`:
 }
 ```
 
-## Name Derivation (for GPR)
+## Name derivation (for GPR)
 
-Base name is determined by the following priority:
+Priority used when deriving the staged GPR package name:
 
-1. `--name` flag or `GPR_NAME` environment variable
-2. Repository name from `package.json.repository`
-3. `package.json.name` (scope stripped)
+1. Explicit overrides
+
+- `packlet.gprName` in `package.json` (scoped or unscoped), or
+- `--name` flag / `GPR_NAME` env (scoped or unscoped)
+
+2. Monorepo default: package name
+
+- In monorepos, we prefer the package's own name (scope stripped) as base.
+
+3. Single-package repos
+
+- Use repo name from `repository.url` if present, otherwise `package.json.name` (scope stripped).
+
+Unscoped bases are combined with the chosen scope (default `kazvizian`).
+
+You can set `packlet.gprName` to values like `packlet-core` (becomes `@kazvizian/packlet-core`) or a fully
+scoped value `@acme/packlet-core` to force a specific name.
 
 ## Developer Notes
 
