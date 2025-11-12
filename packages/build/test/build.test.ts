@@ -86,8 +86,19 @@ describe("@packlet/build programmatic API", () => {
     const cjsPath = path.join(tmp, "dist/index.cjs")
     const target = fs.existsSync(mjsPath) ? mjsPath : cjsPath
     const stat = fs.statSync(target)
-    if (process.platform === "win32") {
-      // Windows doesn't have POSIX execute bits; chmod is a no-op. Just assert file exists.
+    const isWindows =
+      process.platform === "win32" ||
+      path.sep === "\\" ||
+      String(process.env.OS || "")
+        .toLowerCase()
+        .includes("windows")
+    // NOTE: Windows CI and some Windows environments do not support POSIX
+    // execute bits. Calling `chmod +x` is effectively a no-op on those
+    // platforms which makes assertions on `(stat.mode & 0o111)` flaky.
+    // To keep the test cross-platform and stable in CI we only assert the
+    // presence of the built file on Windows, and perform the execute-bit
+    // check on POSIX platforms where it is meaningful.
+    if (isWindows) {
       expect(stat.isFile()).toBe(true)
     } else {
       expect((stat.mode & 0o111) !== 0).toBe(true)

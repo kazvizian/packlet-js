@@ -123,6 +123,16 @@ Base name is determined by the following priority:
 
 Temporary test fixtures are created under `.temp/` and cleaned up automatically.
 
+### CI & Windows
+
+- Windows runners do not honor POSIX execute bits. Tests that verify `chmod +x` fall back to asserting file presence on Windows.
+- `npm pack` can be slow/flaky on Windows. The GPR preparation logic auto-skips packing when `CI=true` and the platform is Windows, or when `GPR_SKIP_PACK=true` is set.
+
+Environment variables:
+
+- `GPR_SKIP_PACK=true` — force skip `npm pack` in GPR preparation.
+- `CI=true` on Windows — implicitly skips `npm pack`.
+
 ## License
 
 MIT © KazViz
