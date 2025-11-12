@@ -28,7 +28,7 @@ Flags:
 `--gpr-dir <path>` staging directory (default: .gpr)
 `--scope <scope>` scope (default env `GPR_SCOPE` or `kazvizian`)
 `--registry <url>` registry (default env `GPR_REGISTRY` or GitHub Packages URL)
-`--name <name>` override base package name
+`--name <name>` override package name (scoped or unscoped)
 `--include-readme` / `--no-include-readme`
 `--include-license` / `--no-include-license`
 `--json` emit artifacts manifest JSON to stdout
@@ -77,7 +77,16 @@ node packages/cli/dist/index.mjs list-artifacts --artifacts packages/gpr/.artifa
 
 ## Relationship to `@packlet/gpr`
 
-`@packlet/gpr` implements the underlying packing logic (`awakenGpr`). This CLI wraps it and adds manifest/JSON convenience output. For conditional staging in CI tests, use the `prepare` subcommand from `@packlet/gpr` directly.
+`@packlet/gpr` implements the underlying packing logic (`awakenGpr`). This CLI wraps it and adds
+manifest/JSON convenience output.
+
+Naming notes:
+
+- You can set `packlet.gprName` in a package's `package.json` (unscoped like `packlet-core` or fully scoped).
+- The `--name` flag (or `GPR_NAME`) also accepts unscoped or scoped values and overrides per-invocation.
+- In monorepos, naming defaults to the package's own name; in single-package repos we may also use the repo name.
+
+For conditional staging in CI tests, use the `prepare` subcommand from `@packlet/gpr` directly.
 
 ## License
 

@@ -62,7 +62,7 @@ packlet validate --root . --json
 
 - `packlet build` – Build ESM (default) and emit types; add `--cjs` to also emit CommonJS
 - `packlet gpr` – Prepare a GitHub Packages (GPR) scoped build and tarballs
-  Flags: `--root`, `--gpr-dir`, `--artifacts`, `--dist`, `--scope`, `--registry`, `--name`,
+  Flags: `--root`, `--gpr-dir`, `--artifacts`, `--dist`, `--scope`, `--registry`, `--name` (scoped or unscoped),
   `--include-readme`, `--no-include-readme`, `--include-license`, `--no-include-license`,
   `--json`, `--manifest <file>`
 
@@ -125,13 +125,36 @@ Running `packlet gpr` writes `<root>/.artifacts/artifacts.json`:
 }
 ```
 
-## Name Derivation (GPR)
+## Name derivation (GPR)
 
-Base name is determined by the following priority:
+Priority for computing the GPR package name:
 
-1. `--name` flag or `GPR_NAME` env var
-2. Repository name from `package.json.repository`
-3. `package.json.name` (scope stripped)
+1. Explicit overrides
+
+- `packlet.gprName` in `package.json` (scoped or unscoped), or
+- `--name` flag / `GPR_NAME` env (scoped or unscoped)
+
+2. Monorepo default: use the package name
+
+- In monorepos (`packages/*`), use `package.json.name` (scope stripped) as the base.
+
+3. Single-package repos: repo or package name
+
+- Use repo name from `repository.url` if present, otherwise `package.json.name` (scope stripped).
+
+Unscoped bases are combined with scope (default `kazvizian`) → `@<scope>/<base>`.
+
+### package.json config
+
+```jsonc
+{
+  "packlet": {
+    "gpr": true,
+    // optional; unscoped becomes @<scope>/<name>, scoped is used verbatim
+    "gprName": "packlet-core"
+  }
+}
+```
 
 ## Monorepo Notes
 
