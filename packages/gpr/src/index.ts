@@ -101,7 +101,7 @@ const isEsmMain = (() => {
     const invoked = process.argv[1]
     if (!invoked) return false
     const invokedUrl = pathToFileURL(invoked).href
-    return import.meta && import.meta.url === invokedUrl
+    return typeof import.meta !== "undefined" && import.meta.url === invokedUrl
   } catch {
     return false
   }
