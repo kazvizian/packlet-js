@@ -18,9 +18,9 @@
     "url": "https://kazviz.com"
   },
   "bin": {
-    "packlet": "dist/index.cjs"
+    "packlet": "dist/index.mjs"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -30,15 +30,14 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     }
   },
   "scripts": {
-    "build": "node ../build/dist/cli.cjs build --exec-cjs",
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
     "lint": "eslint \"src/**/*.ts\" --ext .ts",
     "test": "bun test",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist .tsbuildinfo"
   },
   "dependencies": {
     "commander": "^14.0.2",

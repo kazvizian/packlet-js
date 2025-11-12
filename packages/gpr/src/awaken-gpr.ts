@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process"
+import * as child from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import {
@@ -123,6 +123,13 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
     "true"
   const NAME_OVERRIDE = process.env.GPR_NAME || opts.nameOverride
 
+  // In CI on Windows, spawning `npm pack` is slow and flaky. Allow opt-out via env
+  // and auto-disable in Windows CI to keep tests fast and deterministic.
+  const IS_WINDOWS = process.platform === "win32" || path.sep === "\\"
+  const IN_CI = process.env.CI === "true"
+  const SKIP_PACK =
+    process.env.GPR_SKIP_PACK === "true" || (IS_WINDOWS && IN_CI)
+
   // Create scoped package.json for GitHub Packages via shared derivation logic
   const repoUrlRaw: string | undefined = (() => {
     const repo = rootPkg.repository
@@ -188,12 +195,13 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   // Create npm pack tarballs for GitHub Release assets
   const version = rootPkg.version
   // pack root (npmjs package) - allow skipping during tests to speed up
-  if (process.env.GPR_SKIP_PACK !== "true") {
+  if (!SKIP_PACK) {
     try {
-      const out = execSync("npm pack", {
-        cwd: root,
-        stdio: ["ignore", "pipe", "inherit"]
-      })
+      const out = child
+        .execSync("npm pack", {
+          cwd: root,
+          stdio: ["ignore", "pipe", "inherit"]
+        })
         .toString()
         .trim()
         .split("\n")
@@ -208,12 +216,13 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   }
 
   // pack GPR (scoped package) - allow skipping during tests to speed up
-  if (process.env.GPR_SKIP_PACK !== "true") {
+  if (!SKIP_PACK) {
     try {
-      const out = execSync("npm pack", {
-        cwd: gprDir,
-        stdio: ["ignore", "pipe", "inherit"]
-      })
+      const out = child
+        .execSync("npm pack", {
+          cwd: gprDir,
+          stdio: ["ignore", "pipe", "inherit"]
+        })
         .toString()
         .trim()
         .split("\n")

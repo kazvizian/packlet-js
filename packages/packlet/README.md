@@ -11,6 +11,8 @@
 [![Changesets Butterfly](https://img.shields.io/badge/Changesets-🦋-white)](./CHANGELOG.md)
 [![Biome Linter & Formatted](https://img.shields.io/badge/Biome-60a5fa?style=flat&logo=biome&logoColor=white)](https://biomejs.dev/)
 
+[![gzip size](http://img.badgesize.io/https://unpkg.com/packlet@latest/dist/index.mjs?compression=gzip)](https://unpkg.com/packlet@latest/dist/index.mjs)
+
 </div>
 
 > The main public package for the Packlet toolkit. Installs a single CLI (`packlet`) and a small programmatic API for deterministic packaging and artifact generation.
@@ -40,7 +42,7 @@ bun add -g packlet
 ## Quick Start
 
 ```sh
-# build your package (ESM + CJS + types)
+# build your package (ESM by default; add CJS with --cjs)
 packlet build
 
 # prepare a GPR variant and write a JSON manifest
@@ -58,7 +60,7 @@ packlet validate --root . --json
 
 ## CLI Commands
 
-- `packlet build` – Build ESM + CJS and emit types
+- `packlet build` – Build ESM (default) and emit types; add `--cjs` to also emit CommonJS
 - `packlet gpr` – Prepare a GitHub Packages (GPR) scoped build and tarballs
   Flags: `--root`, `--gpr-dir`, `--artifacts`, `--dist`, `--scope`, `--registry`, `--name`,
   `--include-readme`, `--no-include-readme`, `--include-license`, `--no-include-license`,
@@ -143,16 +145,18 @@ This package lives in a monorepo alongside:
 
 The build is performed by the shared wrapper `@packlet/build`:
 
-- Generates minified ESM + CJS (`dist/index.mjs`, `dist/index.cjs`)
-- Emits types (`dist/index.d.ts`)
-- For CLI usage we pass `--exec-cjs` so `dist/index.cjs` is executable.
+- Generates minified ESM output by default (`dist/index.mjs`). CJS can be emitted with `--cjs` (produces `dist/index.cjs`).
+- Emits types (`dist/index.d.ts`) via `tsc --emitDeclarationOnly`.
+- Sourcemaps are disabled by default for release builds; enable external maps with `--sourcemap external` for debugging.
+- For CLI packages we pass `--exec-js` so the built JS entry (`dist/index.mjs` or `dist/index.cjs`) is marked executable.
 
 `package.json` excerpt:
 
 ```json
 {
   "scripts": {
-    "build": "packlet-build build --exec-cjs"
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
+    "build:cli": "node ../build/dist/cli.mjs build --cjs --exec-js --sourcemap none --external-auto"
   },
   "devDependencies": {
     "@packlet/build": "workspace:*"

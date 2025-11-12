@@ -9,7 +9,7 @@ function mkTmp(prefix: string) {
 }
 
 describe("cli build command", () => {
-  it("builds a simple package into dist", async () => {
+  it("builds ESM + types by default (no CJS)", async () => {
     const tmp = mkTmp("packlet-build-")
     const src = path.join(tmp, "src")
     fs.mkdirSync(src, { recursive: true })
@@ -37,13 +37,53 @@ describe("cli build command", () => {
     const origCwd = process.cwd()
     try {
       process.chdir(tmp)
-      await runCli(["node", "packlet", "build"]) // default options
+      await runCli(["node", "packlet", "build"]) // default: esm only
     } finally {
       process.chdir(origCwd)
     }
     // verify outputs exist
     expect(fs.existsSync(path.join(tmp, "dist/index.mjs"))).toBe(true)
-    expect(fs.existsSync(path.join(tmp, "dist/index.cjs"))).toBe(true)
+    expect(fs.existsSync(path.join(tmp, "dist/index.cjs"))).toBe(false)
     expect(fs.existsSync(path.join(tmp, "dist/index.d.ts"))).toBe(true)
   }, 20000)
+
+  it("emits CJS when --cjs provided", async () => {
+    const tmp = mkTmp("packlet-build-cjs-")
+    const src = path.join(tmp, "src")
+    fs.mkdirSync(src, { recursive: true })
+    fs.writeFileSync(
+      path.join(src, "index.ts"),
+      "export const hello = (n: string)=> 'hi ' + n\n"
+    )
+    writeTsconfig(tmp)
+    const origCwd = process.cwd()
+    try {
+      process.chdir(tmp)
+      await runCli(["node", "packlet", "build", "--cjs"]) // request cjs
+    } finally {
+      process.chdir(origCwd)
+    }
+    expect(fs.existsSync(path.join(tmp, "dist/index.mjs"))).toBe(true)
+    expect(fs.existsSync(path.join(tmp, "dist/index.cjs"))).toBe(true)
+  }, 20000)
 })
+
+function writeTsconfig(dir: string) {
+  fs.writeFileSync(
+    path.join(dir, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          declaration: true,
+          emitDeclarationOnly: false,
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          target: "ES2019",
+          strict: true
+        }
+      },
+      null,
+      2
+    )
+  )
+}

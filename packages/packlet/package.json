@@ -18,9 +18,9 @@
     "directory": "packages/packlet"
   },
   "bin": {
-    "packlet": "dist/index.cjs"
+    "packlet": "dist/index.mjs"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -30,14 +30,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     }
   },
   "scripts": {
-    "build": "node ../build/dist/cli.cjs build --exec-cjs",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "bun run build",
+    "build": "node ../build/dist/cli.mjs build --sourcemap none --external-auto",
+    "clean": "rm -rf dist .tsbuildinfo",
+    "prepublishOnly": "bun run clean && bun run build",
     "test": "bun test"
   },
   "dependencies": {

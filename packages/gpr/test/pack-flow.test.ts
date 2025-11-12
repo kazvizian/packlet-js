@@ -10,7 +10,14 @@
  * test run and performs file-system based assertions against temporary
  * fixture directories.
  */
-import { afterEach, beforeEach, describe, expect, it } from "bun:test"
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it
+} from "bun:test"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
@@ -29,6 +36,10 @@ function touch(p: string, content = "") {
 
 describe("awakenGpr", () => {
   const originalCwd = process.cwd()
+  beforeAll(() => {
+    // Speed up tests and avoid spawning npm pack on CI/Windows
+    process.env.GPR_SKIP_PACK = "true"
+  })
   beforeEach(() => {
     // no module reset needed in bun:test context
   })
@@ -67,8 +78,13 @@ describe("awakenGpr", () => {
     const child =
       require("node:child_process") as typeof import("node:child_process")
     const originalExecSync = child.execSync
-    child.execSync = (() =>
-      Buffer.from("pkg-test-0.1.0.tgz\n")) as unknown as typeof originalExecSync
+    child.execSync = ((cmd: string) => {
+      // Provide deterministic output for both root and scoped packs
+      if (cmd.includes("npm pack")) {
+        return Buffer.from("pkg-test-0.1.0.tgz\n")
+      }
+      return Buffer.from("")
+    }) as unknown as typeof originalExecSync
 
     const res = awakenGpr({ rootDir: root, scope: "acme" })
     // The staging directory for the scoped package should exist

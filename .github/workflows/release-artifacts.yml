@@ -37,7 +37,7 @@ jobs:
 
       - name: Prepare GPR package (gpr)
         run: |
-          node packages/cli/dist/index.cjs gpr --root packages/gpr --json --manifest packages/gpr/.artifacts/artifacts.json
+          node packages/cli/dist/index.mjs gpr --root packages/gpr --json --manifest packages/gpr/.artifacts/artifacts.json
 
       - name: Upload artifacts (gpr)
         uses: actions/upload-artifact@v4

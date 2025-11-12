@@ -9,6 +9,8 @@
 [![Changesets Butterfly](https://img.shields.io/badge/Changesets-🦋-white)](./CHANGELOG.md)
 [![Biome Linter & Formatted](https://img.shields.io/badge/Biome-60a5fa?style=flat&logo=biome&logoColor=white)](https://biomejs.dev/)
 
+[![gzip size](http://img.badgesize.io/https://unpkg.com/@packlet/core@latest/dist/index.mjs?compression=gzip)](https://unpkg.com/@packlet/core@latest/dist/index.mjs)
+
 </div>
 
 Core utilities for preparing and inspecting deterministic release artifacts.

@@ -32,9 +32,9 @@
     }
   },
   "scripts": {
-    "build": "node ../build/dist/cli.cjs build",
+    "build": "node ../build/dist/cli.mjs build",
     "test": "bun test",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist .tsbuildinfo"
   },
   "devDependencies": {
     "@packlet/build": "workspace:*"

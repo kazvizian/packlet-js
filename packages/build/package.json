@@ -1,7 +1,7 @@
 {
   "name": "@packlet/build",
   "version": "0.1.0",
-  "description": "Packlet build wrapper: build ESM+CJS+d.ts for packages and expose programmatic API.",
+  "description": "Packlet build wrapper: build ESM, d.ts, and CJS (opt-in) for packages and expose programmatic API.",
   "license": "MIT",
   "homepage": "https://github.com/kazvizian/packlet-js",
   "repository": {
@@ -17,7 +17,7 @@
     "email": "kazviz@nazator.com",
     "url": "https://kazviz.com"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
@@ -28,16 +28,15 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     }
   },
   "bin": {
-    "packlet-build": "dist/cli.cjs"
+    "packlet-build": "dist/cli.mjs"
   },
   "scripts": {
-    "build": "bun build src/index.ts --outfile=dist/index.mjs --format=esm --target=node --minify && bun build src/index.ts --outfile=dist/index.cjs --format=cjs --target=node --minify && bun build src/cli.ts --outfile=dist/cli.cjs --format=cjs --target=node --minify && chmod +x dist/cli.cjs && bun x tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
-    "clean": "rm -rf dist",
+    "build": "bun build src/index.ts --outfile=dist/index.mjs --format=esm --target=node --minify && bun build src/cli.ts --outfile=dist/cli.mjs --format=esm --target=node --minify && bun x tsc -p tsconfig.json --emitDeclarationOnly --outDir dist && (test -f dist/.tsbuildinfo && mv dist/.tsbuildinfo .tsbuildinfo || true) && chmod +x dist/cli.mjs",
+    "clean": "rm -rf dist .tsbuildinfo",
     "test": "bun test"
   },
   "dependencies": {},
@@ -45,6 +44,9 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "packlet": {
+    "gpr": true
   },
   "engines": {
     "bun": ">=1.2.0",

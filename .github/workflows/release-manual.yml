@@ -46,3 +46,26 @@ jobs:
           NPM_CONFIG_PROVENANCE: "true"
           npm_config_tag: ${{ inputs.dist_tag }}
         run: bun run release
+
+      - name: Configure npm for GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" > ~/.npmrc
+          echo "@${{ github.repository_owner }}:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Packages (GPR)
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for pkg in packages/*; do
+            if [ -f "$pkg/package.json" ] && grep -q '"gpr"\s*:\s*true' "$pkg/package.json"; then
+              echo "Preparing GPR for $pkg"
+              node packages/cli/dist/index.mjs gpr --root "$pkg"
+              echo "Publishing $pkg to GitHub Packages"
+              pushd "$pkg/.gpr" >/dev/null
+              npm publish --access public || npm publish
+              popd >/dev/null
+            fi
+          done
