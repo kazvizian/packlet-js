@@ -1,6 +1,6 @@
 {
   "name": "@packlet/gpr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A lightweight utility for preparing package variants compatible with GitHub Packages (GPR). It focuses on deterministic, local, and CI-friendly workflows",
   "license": "MIT",
   "homepage": "https://github.com/kazvizian/packlet-js",
