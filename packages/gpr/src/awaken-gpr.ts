@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process"
+import * as child from "node:child_process"
 import fs from "node:fs"
 import path from "node:path"
 import {
@@ -190,10 +190,11 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   // pack root (npmjs package) - allow skipping during tests to speed up
   if (process.env.GPR_SKIP_PACK !== "true") {
     try {
-      const out = execSync("npm pack", {
-        cwd: root,
-        stdio: ["ignore", "pipe", "inherit"]
-      })
+      const out = child
+        .execSync("npm pack", {
+          cwd: root,
+          stdio: ["ignore", "pipe", "inherit"]
+        })
         .toString()
         .trim()
         .split("\n")
@@ -210,10 +211,11 @@ export function awakenGpr(opts: AwakenGprOptions = {}): AwakenGprResult {
   // pack GPR (scoped package) - allow skipping during tests to speed up
   if (process.env.GPR_SKIP_PACK !== "true") {
     try {
-      const out = execSync("npm pack", {
-        cwd: gprDir,
-        stdio: ["ignore", "pipe", "inherit"]
-      })
+      const out = child
+        .execSync("npm pack", {
+          cwd: gprDir,
+          stdio: ["ignore", "pipe", "inherit"]
+        })
         .toString()
         .trim()
         .split("\n")
