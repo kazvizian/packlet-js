@@ -45,6 +45,9 @@
     "access": "public",
     "provenance": true
   },
+  "packlet": {
+    "gpr": true
+  },
   "engines": {
     "bun": ">=1.2.0",
     "node": ">=18"
