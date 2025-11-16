@@ -18,13 +18,14 @@
     "url": "https://kazviz.com"
   },
   "bin": {
-    "packlet": "dist/index.mjs"
+    "packlet": "bin/packlet.mjs"
   },
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "sideEffects": false,
   "exports": {
