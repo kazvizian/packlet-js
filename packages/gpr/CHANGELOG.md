@@ -1,5 +1,11 @@
 # @packlet/gpr
 
+## 0.2.1
+
+### Patch Changes
+
+- 54ea4c5: Improves version control and stability by ensuring each package depends on a fixed, published version of its dependencies.
+
 ## 0.2.0
 
 ### Minor Changes
