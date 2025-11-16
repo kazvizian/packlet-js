@@ -35,13 +35,25 @@ export {
 } from "@packlet/core"
 export { awakenGpr } from "@packlet/gpr"
 
-// Execute CLI when run directly
-if (
+// Execute CLI when run directly (CJS or ESM)
+import { pathToFileURL } from "node:url"
+
+const isCjsMain =
   typeof require !== "undefined" &&
   typeof module !== "undefined" &&
   require.main === module
-) {
-  // Fire-and-forget; discard promise
+const isEsmMain = (() => {
+  try {
+    const invoked = process.argv[1]
+    if (!invoked) return false
+    const invokedUrl = pathToFileURL(invoked).href
+    return typeof import.meta !== "undefined" && import.meta.url === invokedUrl
+  } catch {
+    return false
+  }
+})()
+
+if (isCjsMain || isEsmMain) {
   void (async () => {
     await runCli()
   })()
