@@ -1,6 +1,6 @@
 {
   "name": "packlet",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A KazVizian toolkit to build packages and prepare deterministic release artifacts.",
   "license": "MIT",
   "homepage": "https://github.com/kazvizian/packlet-js",
@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "@packlet/core": "^0.1.2",
-    "@packlet/gpr": "^0.2.0",
-    "@packlet/cli": "^0.3.0",
+    "@packlet/gpr": "^0.2.1",
+    "@packlet/cli": "^0.3.1",
     "@packlet/build": "^0.2.1"
   },
   "devDependencies": {},
