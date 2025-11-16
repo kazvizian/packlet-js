@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "commander": "^14.0.2",
-    "@packlet/core": "workspace:*"
+    "@packlet/core": "^0.1.2"
   },
   "devDependencies": {
     "@packlet/build": "workspace:*"

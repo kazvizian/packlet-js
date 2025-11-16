@@ -40,9 +40,9 @@
   },
   "dependencies": {
     "commander": "^14.0.2",
-    "@packlet/core": "workspace:*",
-    "@packlet/gpr": "workspace:*",
-    "@packlet/build": "workspace:*"
+    "@packlet/core": "^0.1.2",
+    "@packlet/gpr": "^0.2.0",
+    "@packlet/build": "^0.2.1"
   },
   "devDependencies": {
     "@packlet/build": "workspace:*"
