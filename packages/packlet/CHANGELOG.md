@@ -1,5 +1,13 @@
 # Packlet (Aggregate Changelog)
 
+## 0.3.2
+
+### Patch Changes
+
+- ffab721: Updates the CLI entry point logic for both the cli and packlet packages to improve compatibility with CommonJS (CJS) and ECMAScript Module (ESM) environments. Also ensures that the bin directory is included in the published package files.
+- Updated dependencies [ffab721]
+  - @packlet/cli@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
