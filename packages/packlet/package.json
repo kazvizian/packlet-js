@@ -39,10 +39,10 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@packlet/core": "workspace:*",
-    "@packlet/gpr": "workspace:*",
-    "@packlet/cli": "workspace:*",
-    "@packlet/build": "workspace:*"
+    "@packlet/core": "^0.1.2",
+    "@packlet/gpr": "^0.2.0",
+    "@packlet/cli": "^0.3.0",
+    "@packlet/build": "^0.2.1"
   },
   "devDependencies": {},
   "keywords": [
